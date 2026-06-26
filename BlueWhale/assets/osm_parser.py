@@ -4,12 +4,10 @@
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
 
-
 import clr
 
 clr.AddReferenceByPartialName("System.Xml")
 from System.Xml import XmlTextReader, XmlNodeType
-
 
 
 class ipyNetParser:
@@ -66,8 +64,6 @@ class ipyNetParser:
         if self.__reader.HasAttributes:
             self.__reader.MoveToAttribute(attrName)
             return self.__reader.Value
-
-
 
 
 class osmNetHandler(ipyNetParser):

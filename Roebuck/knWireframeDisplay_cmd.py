@@ -18,7 +18,7 @@ __commandname__ = "knWireframeDisplay"
 def RunCommand( is_interactive ):
 
 
-guid = rs.GetObjects("Get Objects to display in wireframe")
+    guid = rs.GetObjects("Get Objects to display in wireframe")
     
     viewportId = sc.doc.Views.ActiveView.ActiveViewportID
     

@@ -13,7 +13,7 @@ __commandname__ = "knAreainSF"
 def RunCommand( is_interactive ):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
 
     geos = rs.GetObjects("Select Geometries to measure area in SF", 
                          rs.filter.curve | rs.filter.surface | rs.filter.polysurface | rs.filter.mesh | rs.filter.extrusion,

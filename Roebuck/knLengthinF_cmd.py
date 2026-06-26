@@ -29,7 +29,7 @@ def calculate_length_in_feet(geos):
 def RunCommand(is_interactive):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
     geos = rs.GetObjects("Select curves/edges for length in Feet", 
                          rs.filter.curve | rs.filter.edgeobject, 
                          preselect=True)

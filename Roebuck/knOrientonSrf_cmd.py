@@ -13,7 +13,7 @@ __commandname__ = "knOrientonSrf"
 def RunCommand( is_interactive ):
 
 
-print("Executing"), __commandname__
+    print("Executing"), __commandname__
     
     block_id = rs.GetObject("Select a block instance to orient", rs.filter.instance)
     if block_id is None: 

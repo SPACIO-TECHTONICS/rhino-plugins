@@ -15,7 +15,7 @@ __commandname__ = "knImportWorksessionFiles"
 def RunCommand( is_interactive ):
 
 
-items = ("Select", "No", "Yes")
+    items = ("Select", "No", "Yes")
     results = rs.GetBoolean("Save as different file?", items, (True) )
     
     if(results[0] == True):

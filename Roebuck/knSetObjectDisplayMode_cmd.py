@@ -13,7 +13,7 @@ __commandname__ = "knSetObjectDisplayMode"
 def RunCommand( is_interactive ):
 
 
-objIDs=rs.GetObjects("Get Objects whose display modes to change",8+16+32,preselect=True)
+    objIDs=rs.GetObjects("Get Objects whose display modes to change",8+16+32,preselect=True)
     if not objIDs: return
     
     

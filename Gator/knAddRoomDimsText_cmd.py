@@ -28,7 +28,7 @@ def format_arch(dist, u_sys):
 def RunCommand(is_interactive):
 
 
-sc.doc = Rhino.RhinoDoc.ActiveDoc
+    sc.doc = Rhino.RhinoDoc.ActiveDoc
     u_sys = sc.doc.ModelUnitSystem
     
     detail_id = None

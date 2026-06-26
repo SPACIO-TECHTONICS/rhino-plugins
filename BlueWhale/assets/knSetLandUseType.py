@@ -7,4 +7,4 @@ import rhinoscriptsyntax as rs
 
 
 
-rs.SetDocumentUserText(""
+# rs.SetDocumentUserText(""

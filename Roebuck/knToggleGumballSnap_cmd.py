@@ -12,7 +12,7 @@ __commandname__ = "knToggleGumballSnap"
 def RunCommand( is_interactive ):
 
 
-GumSnapState = Rhino.ApplicationSettings.ModelAidSettings.SnappyGumballEnabled
+    GumSnapState = Rhino.ApplicationSettings.ModelAidSettings.SnappyGumballEnabled
     if GumSnapState:
         Rhino.ApplicationSettings.ModelAidSettings.SnappyGumballEnabled = False
         print('Gumball snap is OFF')

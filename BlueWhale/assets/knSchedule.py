@@ -614,9 +614,9 @@ class Tabl_Form(forms.Form):
     def SetupParameters(self):
         unit = sc.doc.GetUnitSystemName(True, False, True, True)
         parameters = []
-        parameters.append(
-            Parameter(self, "
-        )
+        # parameters.append(
+        #     Parameter(self, "
+        # )
         parameters.append(Parameter(self, "GUID", len(parameters)))
         parameters.append(Parameter(self, "Name", len(parameters), vis=True, edit=True))
         parameters.append(Parameter(self, "Layer", len(parameters), vis=True))

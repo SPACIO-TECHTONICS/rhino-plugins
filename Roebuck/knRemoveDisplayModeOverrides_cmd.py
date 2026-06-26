@@ -13,7 +13,7 @@ __commandname__ = "knRemoveDisplayModeOverrides"
 def RunCommand( is_interactive ):
 
 
-guid = rs.GetObjects("Set Objects to remove overrides")
+    guid = rs.GetObjects("Set Objects to remove overrides")
     
     viewportId = sc.doc.Views.ActiveView.ActiveViewportID
     

@@ -29,7 +29,6 @@ def RunCommand(is_interactive):
         print("A block with name '{}' already exists.".format(new_name))
         return 1
 
-
     import scriptcontext as sc
 
     idef = sc.doc.InstanceDefinitions.Find(old_name)

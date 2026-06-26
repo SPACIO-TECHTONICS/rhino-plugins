@@ -10,7 +10,7 @@ import System.Drawing.Color
 def RunCommand( is_interactive ):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
 
     point_a = rs.GetPoint("Pick First Point")
     if point_a:

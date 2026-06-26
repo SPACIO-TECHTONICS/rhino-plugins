@@ -12,7 +12,7 @@ __commandname__ = "knObjectColortoMaterial"
 def RunCommand( is_interactive ):
 
 
-sourceObjects = rs.GetObjects(message="Select Objects to use color", preselect=True, select=False)
+    sourceObjects = rs.GetObjects(message="Select Objects to use color", preselect=True, select=False)
     
     for obj in sourceObjects:
         obj_color = rs.ObjectColor(obj)

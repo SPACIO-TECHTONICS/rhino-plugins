@@ -10,7 +10,7 @@ import rhinoscriptsyntax as rs
 def RunCommand(is_interactive):
 
 
-views = Rhino.RhinoDoc.ActiveDoc.Views.GetPageViews()
+    views = Rhino.RhinoDoc.ActiveDoc.Views.GetPageViews()
 
     print(views)
 

@@ -29,7 +29,7 @@ def calculate_length_in_meters(geos):
 def RunCommand(is_interactive):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
 
     geos = rs.GetObjects("Select curves/edges for length in Meters", 
                          rs.filter.curve | rs.filter.edgeobject, 

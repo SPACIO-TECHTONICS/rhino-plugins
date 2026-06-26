@@ -16,7 +16,7 @@ __commandname__ = "knDeleteLayers"
 def RunCommand( is_interactive ):
 
 
-layerlist = []
+    layerlist = []
     for layer in sc.doc.ActiveDoc.Layers:
         layerlist.Add(layer.Name)
     

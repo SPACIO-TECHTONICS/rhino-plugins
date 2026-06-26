@@ -15,7 +15,7 @@ __commandname__ = "knRandomColorstoLayers"
 def RunCommand( is_interactive ):
 
 
-print("Executing"), __commandname__
+    print("Executing"), __commandname__
     def RandomColorLayers():
         if "CL_Choice" in sc.sticky: sel_choice = sc.sticky["CL_Choice"]
         else: sel_choice = False

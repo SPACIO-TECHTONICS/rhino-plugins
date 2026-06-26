@@ -12,7 +12,7 @@ __commandname__ = "knGetDotPosition"
 def RunCommand( is_interactive ):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
     
     obj=rs.GetObject("Select Annotation Dot",rs.filter.annotation)
     

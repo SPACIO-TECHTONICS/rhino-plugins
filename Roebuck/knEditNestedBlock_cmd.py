@@ -12,7 +12,7 @@ __commandname__ = "knEditNestedBlock"
 def RunCommand( is_interactive ):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
     
     go = Rhino.Input.Custom.GetObject()
     go.SetCommandPrompt("Select a block (Ctrl+Shift+Click for nested blocks)")

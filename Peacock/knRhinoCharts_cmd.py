@@ -29,7 +29,7 @@ if '__dashboard_instance' not in globals():
 def RunCommand(is_interactive):
 
 
-global __dashboard_instance
+    global __dashboard_instance
     
     if __dashboard_instance:
         try:

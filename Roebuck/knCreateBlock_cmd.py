@@ -12,7 +12,7 @@ __commandname__ = "knCreateBlock"
 def RunCommand( is_interactive ):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
     
     object_ids = rs.GetObjects("Select objects to define block", preselect=True)
     if( object_ids == None ):

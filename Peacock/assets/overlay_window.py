@@ -68,9 +68,7 @@ class ChartOverlay(Forms.Form):
             self.ShowInTaskbar = False
 
             self.BackgroundColor = Drawing.Colors.Transparent
-            self.Opacity = (
-                1.0
-            )
+            self.Opacity = 1.0
             self.Owner = Rhino.UI.RhinoEtoApp.MainWindow
             self.Focusable = False
 

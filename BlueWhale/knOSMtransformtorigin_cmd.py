@@ -43,7 +43,6 @@ def RunCommand(is_interactive):
 
         rs.SetDocumentUserText("Transformation Matrix", str(combined_matrix))
 
-
         inverse_combined = rg.Transform.Empty
         success, inverse_combined = combined_matrix.TryGetInverse()
         if success:

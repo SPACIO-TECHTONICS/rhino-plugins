@@ -12,7 +12,7 @@ __commandname__ = "knOrientonCurve"
 def RunCommand( is_interactive ):
 
 
-print("Executing"), __commandname__
+    print("Executing"), __commandname__
     
     obj = rs.GetObject("Select planar surface or curve to orient", rs.filter.surface | rs.filter.curve)
     if not obj: return 1

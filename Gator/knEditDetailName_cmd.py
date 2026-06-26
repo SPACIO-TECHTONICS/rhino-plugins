@@ -13,7 +13,7 @@ __commandname__ = "knEditDetailName"
 def RunCommand( is_interactive ):
 
 
-pageview = sc.doc.Views.ActiveView
+    pageview = sc.doc.Views.ActiveView
     
     if type(pageview) != Rhino.Display.RhinoPageView:
         rs.MessageBox("This tool only works in layout space.")

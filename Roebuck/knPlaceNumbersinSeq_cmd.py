@@ -13,7 +13,7 @@ import Rhino
 def RunCommand( is_interactive ):
 
 
-print("Executing"), __commandname__ targeting the active Rhino document
+    print("Executing"), __commandname__ targeting the active Rhino document
     sc.doc = Rhino.RhinoDoc.ActiveDoc
     
     pts = rs.GetPoints(True, False, "Select Locations", "Select Next Location")

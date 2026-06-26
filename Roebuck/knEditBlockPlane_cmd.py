@@ -13,7 +13,7 @@ __commandname__ = "knEditBlockPlane"
 def RunCommand( is_interactive ):
 
 
-print("Executing " + __commandname__)
+    print("Executing " + __commandname__)
     
     instance_id = rs.GetObject("Select a block instance to edit its reference plane", rs.filter.instance)
     if( instance_id == None ):

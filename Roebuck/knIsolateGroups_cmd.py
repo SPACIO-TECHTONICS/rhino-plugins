@@ -13,7 +13,7 @@ __commandname__ = "knIsolateGroups"
 def RunCommand( is_interactive ):
 
 
-gnames = rs.GroupNames()
+    gnames = rs.GroupNames()
     
     for name in gnames:
         rs.Command("-SelGroup " + name)

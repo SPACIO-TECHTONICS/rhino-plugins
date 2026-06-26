@@ -11,7 +11,7 @@ __commandname__ = "knUVEdit"
 def RunCommand( is_interactive ):
 
 
-print("Executing", __commandname__)
+    print("Executing", __commandname__)
     
     mesh_id = rs.GetObject("Select a mesh to edit its UVs", rs.filter.mesh)
     if not mesh_id: 

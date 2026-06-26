@@ -16,7 +16,7 @@ __commandname__ = "knPlanarizeSurface"
 def RunCommand( is_interactive ):
 
 
-print("Executing"), __commandname__
+    print("Executing"), __commandname__
     
     
     guid = rs.GetSurfaceObject("Select surface to planarize",True, True)

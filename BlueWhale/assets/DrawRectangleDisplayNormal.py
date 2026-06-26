@@ -65,7 +65,6 @@ def DrawRectangleDisplayNormal():
     else:
         return
 
-
     gp.Dispose()
 
 

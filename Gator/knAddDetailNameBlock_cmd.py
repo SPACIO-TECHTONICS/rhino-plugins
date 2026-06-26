@@ -16,7 +16,7 @@ __commandname__ = "knAddDetailNameBlock"
 def RunCommand(is_interactive):
 
 
-detailnumber = 1
+    detailnumber = 1
     pageview = sc.doc.Views.ActiveView
     
     if type(pageview) != Rhino.Display.RhinoPageView:
