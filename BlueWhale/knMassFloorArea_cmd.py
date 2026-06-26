@@ -1,21 +1,15 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-import rhinoscriptsyntax as rs  # type: ignore
-import scriptcontext as sc  # type: ignore
-import Rhino  # type: ignore
+import rhinoscriptsyntax as rs
+import scriptcontext as sc
+import Rhino
 from assets import auth_helper
 
 __commandname__ = "knMassFloorArea"
+
 
 def _calc_projected_area(mesh, tolerance):
     """Helper function to calculate the projected area of a single mesh."""
@@ -47,7 +41,7 @@ def _calc_projected_area(mesh, tolerance):
                 amp = Rhino.Geometry.AreaMassProperties.Compute(crv)
                 if amp:
                     area += amp.Area
-                    
+
     return area
 
 
@@ -55,16 +49,21 @@ def RunCommand(is_interactive):
     if not auth_helper.ensure_authenticated("BlueWhale", "knMassFloorArea"):
         return auth_helper.get_cancel_result()
 
-    # 1. Prompt user to select masses
-    obj_ids = rs.GetObjects("Select masses (Polysurfaces or Meshes)", rs.filter.polysurface | rs.filter.surface | rs.filter.mesh)
+    obj_ids = rs.GetObjects(
+        "Select masses (Polysurfaces or Meshes)",
+        rs.filter.polysurface | rs.filter.surface | rs.filter.mesh,
+    )
     if not obj_ids:
         return Rhino.Commands.Result.Cancel
 
-    # 2. Ask for calculation method if multiple objects are selected
     calc_method = "Footprint"
     if len(obj_ids) > 1:
         options = ["Footprint", "SumOfIndividuals"]
-        result = rs.GetString("Multiple objects selected. Calculate combined footprint or sum of individual areas?", "Footprint", options)
+        result = rs.GetString(
+            "Multiple objects selected. Calculate combined footprint or sum of individual areas?",
+            "Footprint",
+            options,
+        )
         if not result or result not in options:
             return Rhino.Commands.Result.Cancel
         calc_method = result
@@ -72,7 +71,6 @@ def RunCommand(is_interactive):
     tolerance = sc.doc.ModelAbsoluteTolerance
     total_area = 0.0
 
-    # 3. Process geometry based on user choice
     if calc_method == "Footprint":
         combined_mesh = Rhino.Geometry.Mesh()
         for obj_id in obj_ids:
@@ -85,7 +83,7 @@ def RunCommand(is_interactive):
                         combined_mesh.Append(m)
             elif isinstance(geo, Rhino.Geometry.Mesh):
                 combined_mesh.Append(geo)
-                
+
         total_area = _calc_projected_area(combined_mesh, tolerance)
 
     else:
@@ -100,10 +98,9 @@ def RunCommand(is_interactive):
                         single_mesh.Append(m)
             elif isinstance(geo, Rhino.Geometry.Mesh):
                 single_mesh.Append(geo)
-                
+
             total_area += _calc_projected_area(single_mesh, tolerance)
 
-    # 4. Map document units to standard area abbreviations
     unit_system = sc.doc.ModelUnitSystem
     unit_map = {
         Rhino.UnitSystem.Millimeters: "sq.mm",
@@ -113,18 +110,18 @@ def RunCommand(is_interactive):
         Rhino.UnitSystem.Feet: "sf",
         Rhino.UnitSystem.Yards: "sq.yd",
         Rhino.UnitSystem.Miles: "sq.mi",
-        Rhino.UnitSystem.Kilometers: "sq.km"
+        Rhino.UnitSystem.Kilometers: "sq.km",
     }
-    
+
     sq_unit_str = unit_map.get(unit_system, "sq.{0}".format(str(unit_system).lower()))
 
-    # 5. Format output, print it, and copy to clipboard
     output_str = "{0} {1}".format(total_area, sq_unit_str)
-    
+
     print(output_str)
     rs.ClipboardText(output_str)
 
     return Rhino.Commands.Result.Success
+
 
 if __name__ == "__main__":
     RunCommand(True)

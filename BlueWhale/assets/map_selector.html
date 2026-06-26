@@ -11,7 +11,6 @@
  * 
  * Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
  */
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -48,46 +47,32 @@
     </style>
 </head>
 <body>
-
 <div class="controls">
     <input type="text" id="search-input" placeholder="Search for a city or place..." />
     <button onclick="search()">Search</button>
     <button onclick="clearSelection()" style="background:#666;">Clear</button>
 </div>
-
 <div class="info">
     <b>Instructions:</b><br/>
     1. Search for a location.<br/>
     2. <b>Click and Drag</b> on the map to draw your selection area.<br/>
     3. Click 'Confirm' to import 3D buildings.
 </div>
-
 <div id="map"></div>
-
 <button class="confirm-btn" onclick="confirmSelection()">Confirm BBox Selection</button>
-
 <script>
-    // Initialize Map
-    var map = L.map('map').setView([40.703, -73.990], 15); // DUMBO default
+    var map = L.map('map').setView([40.703, -73.990], 15); 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
-
     L.control.scale().addTo(map);
-
-    // Set cursor to crosshair for drawing
     document.getElementById('map').style.cursor = 'crosshair';
-
-    // Since we want "Drag and Select", let's implement a simple box tool
     var startPoint = null;
     var selectionBox = null;
-
     map.on('mousedown', function(e) {
-        // If clicking on a control or something else, ignore
         if (e.originalEvent.target.id !== 'map' && !e.originalEvent.target.classList.contains('leaflet-container')) return;
-        
         if (selectionBox) map.removeLayer(selectionBox);
         startPoint = e.latlng;
         selectionBox = L.rectangle([startPoint, startPoint], {
@@ -98,24 +83,20 @@
         }).addTo(map);
         map.dragging.disable();
     });
-
     map.on('mousemove', function(e) {
         if (startPoint && selectionBox) {
             selectionBox.setBounds([startPoint, e.latlng]);
         }
     });
-
     map.on('mouseup', function(e) {
         if (startPoint) {
             startPoint = null;
             map.dragging.enable();
         }
     });
-
     function search() {
         var query = document.getElementById('search-input').value;
         if (!query) return;
-
         var xhr = new XMLHttpRequest();
         xhr.open('GET', 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query), true);
         xhr.onreadystatechange = function() {
@@ -123,7 +104,7 @@
                 var data = JSON.parse(xhr.responseText);
                 if (data.length > 0) {
                     var result = data[0];
-                    var bbox = result.boundingbox; // [minlat, maxlat, minlon, maxlon]
+                    var bbox = result.boundingbox; 
                     map.fitBounds([
                         [bbox[0], bbox[2]],
                         [bbox[1], bbox[3]]
@@ -136,26 +117,21 @@
         };
         xhr.send();
     }
-
-    // Support Enter key
     document.getElementById('search-input').addEventListener("keyup", function(event) {
         if (event.keyCode === 13) {
             search();
         }
     });
-
     function clearSelection() {
         if (selectionBox) {
             map.removeLayer(selectionBox);
             selectionBox = null;
         }
     }
-
     function confirmSelection() {
         var bounds;
         if (selectionBox) {
             bounds = selectionBox.getBounds();
-            // Check if it's too small
             var sw = bounds.getSouthWest();
             var ne = bounds.getNorthEast();
             if (Math.abs(sw.lat - ne.lat) < 0.0001 && Math.abs(sw.lng - ne.lng) < 0.0001) {
@@ -163,20 +139,13 @@
                 return;
             }
         } else {
-            // If no box drawn, use current screen
             bounds = map.getBounds();
         }
-        
         var sw = bounds.getSouthWest();
         var ne = bounds.getNorthEast();
-        
-        // Format: min_lat,min_lon,max_lat,max_lon
         var bboxStr = sw.lat + "," + sw.lng + "," + ne.lat + "," + ne.lng;
-        
-        // Use document.title to pass data back to Eto.WebView
         document.title = "BBOX:" + bboxStr;
     }
 </script>
-
 </body>
 </html>

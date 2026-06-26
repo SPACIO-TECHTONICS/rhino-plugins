@@ -1,19 +1,12 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-import rhinoscriptsyntax as rs  # type: ignore
-import Rhino.Geometry as rg  # type: ignore
-import Rhino  # type: ignore
-import scriptcontext as sc  # type: ignore
+import rhinoscriptsyntax as rs
+import Rhino.Geometry as rg
+import Rhino
+import scriptcontext as sc
 
 __commandname__ = "knAreainSM"
 
@@ -26,7 +19,6 @@ print("Executing " + __commandname__)
                          rs.filter.curve | rs.filter.surface | rs.filter.polysurface | rs.filter.mesh | rs.filter.extrusion)
     if not geos: return
 
-    # Calculate scale factor from doc units to Meters
     doc_unit_system = sc.doc.ModelUnitSystem
     scale = Rhino.RhinoMath.UnitScale(doc_unit_system, Rhino.UnitSystem.Meters)
     area_factor = scale * scale

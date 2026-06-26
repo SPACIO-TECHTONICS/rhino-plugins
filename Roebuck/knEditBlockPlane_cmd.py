@@ -1,30 +1,20 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-import rhinoscriptsyntax as rs  # type: ignore
-import scriptcontext as sc  # type: ignore
-import Rhino  # type: ignore
-import System.Drawing.Color as Color  # type: ignore
+import rhinoscriptsyntax as rs
+import scriptcontext as sc
+import Rhino
+import System.Drawing.Color as Color
 
 __commandname__ = "knEditBlockPlane"
 
-# RunCommand is the called when the user enters the command name in Rhino.
-# The command name is defined by the filname minus "_cmd.py"
 def RunCommand( is_interactive ):
 
 
 print("Executing " + __commandname__)
     
-    # 1. Select block instance
     instance_id = rs.GetObject("Select a block instance to edit its reference plane", rs.filter.instance)
     if( instance_id == None ):
         return 1
@@ -32,7 +22,6 @@ print("Executing " + __commandname__)
     block_name = rs.BlockInstanceName(instance_id)
     instance_xform = rs.BlockInstanceXform(instance_id)
     
-    # 2. Get NEW reference plane origin using RhinoCommon
     gp_origin = Rhino.Input.Custom.GetPoint()
     gp_origin.SetCommandPrompt("Select NEW reference plane origin (base point)")
     gp_origin.Get()
@@ -40,7 +29,6 @@ print("Executing " + __commandname__)
         return 1
     origin = gp_origin.Point()
         
-    # 3. Get X-axis point
     gp_x = Rhino.Input.Custom.GetPoint()
     gp_x.SetCommandPrompt("Select a point on the NEW reference plane's X-axis")
     gp_x.SetBasePoint(origin, True)
@@ -50,7 +38,6 @@ print("Executing " + __commandname__)
         return 1
     x_pt = gp_x.Point()
 
-    # Dynamic Draw function to visualize the plane in real-time
     def GetYPointDynamicDraw(sender, e):
         current_pt = e.CurrentPoint
         xaxis = x_pt - origin
@@ -76,7 +63,6 @@ print("Executing " + __commandname__)
         ]
         e.Display.DrawPolyline(corners, Color.DarkGray, 1)
 
-    # 4. Get Y-axis point with dynamic draw
     gp_y = Rhino.Input.Custom.GetPoint()
     gp_y.SetCommandPrompt("Select a point on the NEW reference plane's Y-axis")
     gp_y.SetBasePoint(origin, True)
@@ -91,7 +77,6 @@ print("Executing " + __commandname__)
         print("Invalid points selected for plane.")
         return 1
 
-    # 5. Calculate transformations
     rc, inv_xform = instance_xform.TryGetInverse()
     if not rc: 
         print("Failed to invert instance transform.")
@@ -103,7 +88,6 @@ print("Executing " + __commandname__)
     xform_def = Rhino.Geometry.Transform.ChangeBasis(Rhino.Geometry.Plane.WorldXY, local_plane)
     xform_inst_offset = Rhino.Geometry.Transform.ChangeBasis(local_plane, Rhino.Geometry.Plane.WorldXY)
 
-    # 6. Modify the block definition geometry
     idef = sc.doc.InstanceDefinitions.Find(block_name)
     if not idef: 
         return 1
@@ -119,7 +103,6 @@ print("Executing " + __commandname__)
         
     sc.doc.InstanceDefinitions.ModifyGeometry(idef.Index, geometry, attributes)
     
-    # 7. Update all instances to preserve their world locations
     instances = idef.GetReferences(1) 
     for inst in instances:
         old_xform = inst.InstanceXform
@@ -131,12 +114,6 @@ print("Executing " + __commandname__)
 
     sc.doc.Views.Redraw()
 
-    # you can optionally return a value from this function
-    # to signify command result. Return values that make
-    # sense are
-    # 0 == success
-    # 1 == cancel
-    # If this function does not return a value, success is assumed
     return 0
 
 if __name__ == "__main__":

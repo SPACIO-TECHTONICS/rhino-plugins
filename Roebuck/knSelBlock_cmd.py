@@ -1,13 +1,6 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
 import rhinoscriptsyntax as rs
@@ -26,12 +19,10 @@ class BlockSearchDialog(forms.Dialog[bool]):
         
         self.selected_blocks = []
         
-        # --- UI Controls ---
         self.lbl_search = forms.Label(Text="Type at least 3 characters to search:")
         self.txt_search = forms.TextBox()
         self.txt_search.TextChanged += self.OnSearchTextChanged
         
-        # GridView handles high-performance vertical layout tracking seamlessly
         self.grid_blocks = forms.GridView()
         self.grid_blocks.ShowHeader = False
         self.grid_blocks.AllowMultipleSelection = True
@@ -50,7 +41,6 @@ class BlockSearchDialog(forms.Dialog[bool]):
         self.btn_cancel = forms.Button(Text="Cancel")
         self.btn_cancel.Click += self.OnCancelClick
         
-        # --- Layout Assembly ---
         layout = forms.TableLayout()
         layout.Spacing = drawing.Size(6, 6)
         
@@ -63,7 +53,6 @@ class BlockSearchDialog(forms.Dialog[bool]):
         footer_layout.Spacing = drawing.Size(6, 6)
         footer_layout.Rows.Add(forms.TableRow(None, self.btn_ok, self.btn_cancel))
         
-        # Assembled cleanly without the viewport picker button layout track
         layout.Rows.Add(forms.TableRow(self.lbl_search))
         layout.Rows.Add(forms.TableRow(self.txt_search))
         layout.Rows.Add(scrollable_row) 
@@ -115,7 +104,6 @@ class BlockSearchDialog(forms.Dialog[bool]):
 def RunCommand( is_interactive ):
     matching_blocks = []
     
-    # 1. Pre-selection bypass check
     pre_selected = rs.SelectedObjects()
     if pre_selected:
         for obj in pre_selected:
@@ -124,7 +112,6 @@ def RunCommand( is_interactive ):
                 if b_name and b_name not in matching_blocks:
                     matching_blocks.append(b_name)
                     
-    # 2. Launch cleaner form if nothing was selected beforehand
     if not matching_blocks:
         dialog = BlockSearchDialog()
         rc = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
@@ -133,7 +120,6 @@ def RunCommand( is_interactive ):
         else:
             return 1
 
-    # 3. Compile and apply selection stack
     if matching_blocks:
         objects_to_select = []
         

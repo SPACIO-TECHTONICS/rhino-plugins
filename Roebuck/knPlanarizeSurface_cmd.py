@@ -1,30 +1,18 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-# Planarize Surface
-# ver 1.00
-# 
 
 
 import System.Guid, System.Drawing.Color
-import Rhino.DocObjects as rd  # type: ignore
-import Rhino as r  # type: ignore
-import scriptcontext as sc  # type: ignore
-import rhinoscriptsyntax as rs  # type: ignore
+import Rhino.DocObjects as rd
+import Rhino as r
+import scriptcontext as sc
+import rhinoscriptsyntax as rs
 
 __commandname__ = "knPlanarizeSurface"
 
-# RunCommand is the called when the user enters the command name in Rhino.
-# The command name is defined by the filname minus "_cmd.py"
 def RunCommand( is_interactive ):
 
 
@@ -42,7 +30,6 @@ print("Executing"), __commandname__
     
     if (surface_obj.IsPlanar() == True):
         print("The surface is planar")
-        #rs.AddTextDot("The surface is planar",surface_obj.PointAt(0.5, 0.5))
         sc.doc.Objects.UnselectAll()
         sc.doc.Views.Redraw()
         return r.Commands.Result.Success

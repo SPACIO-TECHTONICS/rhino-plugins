@@ -1,44 +1,36 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-# -*- coding: utf-8 -*-
-import Rhino.UI  # type: ignore
-import Eto.Drawing as drawing  # type: ignore
-import Eto.Forms as forms  # type: ignore
-import System.ComponentModel  # type: ignore
+import Rhino.UI
+import Eto.Drawing as drawing
+import Eto.Forms as forms
+import System.ComponentModel
 import osm_fetcher
+
 reload(osm_fetcher)
+
 
 class OSMDownloadDialog(forms.Dialog):
     def __init__(self, bbox):
         self.bbox = bbox
         self.result_path = None
         self.error_message = None
-        
+
         self.Title = "OSM Online Import"
         self.ClientSize = drawing.Size(400, 120)
         self.Padding = drawing.Padding(10)
         self.WindowStyle = forms.WindowStyle.Default
         self.Resizable = False
-        
-        # UI Elements
+
         self.status_label = forms.Label(Text="Connecting to online service...")
         self.progress_bar = forms.ProgressBar()
         self.progress_bar.Indeterminate = True
-        
+
         self.cancel_button = forms.Button(Text="Cancel")
         self.cancel_button.Click += self.on_cancel_click
-        
-        # Layout
+
         layout = forms.DynamicLayout()
         layout.Spacing = drawing.Size(5, 5)
         layout.AddRow(self.status_label)
@@ -46,14 +38,12 @@ class OSMDownloadDialog(forms.Dialog):
         layout.AddRow(None)
         layout.AddRow(self.cancel_button)
         self.Content = layout
-        
-        # Background Worker
+
         self.worker = System.ComponentModel.BackgroundWorker()
         self.worker.WorkerSupportsCancellation = True
         self.worker.DoWork += self.do_work
         self.worker.RunWorkerCompleted += self.on_worker_completed
-        
-        # Start immediately
+
         self.Shown += self.on_shown
 
     def on_shown(self, sender, e):
@@ -61,17 +51,15 @@ class OSMDownloadDialog(forms.Dialog):
 
     def do_work(self, sender, e):
         try:
+
             def update_status(text):
-                # We need to use Invoke to update UI from background thread
                 forms.Application.Instance.AsyncInvoke(lambda: self.set_status(text))
-            
+
             def check_cancel():
                 return self.worker.CancellationPending
-            
+
             path = osm_fetcher.fetch_osm_xml(
-                self.bbox, 
-                update_callback=update_status,
-                cancel_check=check_cancel
+                self.bbox, update_callback=update_status, cancel_check=check_cancel
             )
             e.Result = path
         except Exception as ex:
@@ -102,44 +90,43 @@ class OSMDownloadDialog(forms.Dialog):
         else:
             self.Close()
 
+
 class ModelCreationProgress(forms.Form):
     def __init__(self, total, message="Creating 3D Model..."):
-        # Initialize internal state first
         self.total = total
         self.current = 0
-        
-        # UI Setup
+
         self.Title = "UrbanDesign 4 Rhino"
         self.ClientSize = drawing.Size(400, 100)
         self.Padding = drawing.Padding(20)
         self.WindowStyle = forms.WindowStyle.Default
         self.Topmost = True
-        
+
         self.status_label = forms.Label(Text=message)
         self.progress_bar = forms.ProgressBar()
         self.progress_bar.MinValue = 0
         self.progress_bar.MaxValue = total
         self.progress_bar.Value = 0
-        
+
         layout = forms.DynamicLayout()
         layout.Spacing = drawing.Size(10, 10)
         layout.AddRow(self.status_label)
         layout.AddRow(self.progress_bar)
         self.Content = layout
-        
-        # Position the window
+
         owner = Rhino.UI.RhinoEtoApp.MainWindow
         self.Owner = owner
-        self.Location = drawing.Point(owner.Location.X + (owner.Width - self.Width) / 2,
-                                     owner.Location.Y + (owner.Height - self.Height) / 2)
+        self.Location = drawing.Point(
+            owner.Location.X + (owner.Width - self.Width) / 2,
+            owner.Location.Y + (owner.Height - self.Height) / 2,
+        )
 
     def update(self, value, message=None):
         """Update the progress bar and label."""
         self.progress_bar.Value = min(value, self.total)
         if message:
             self.status_label.Text = message
-        
-        # Force UI update while on the main thread
+
         forms.Application.Instance.RunIteration()
 
     def show(self):
@@ -148,6 +135,7 @@ class ModelCreationProgress(forms.Form):
     def close(self):
         self.Close()
 
+
 def download_osm_with_progress(bbox):
     """
     Shows a progress dialog and downloads OSM data.
@@ -155,10 +143,11 @@ def download_osm_with_progress(bbox):
     """
     dialog = OSMDownloadDialog(bbox)
     dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
-    
+
     if dialog.error_message and not dialog.result_path:
         import rhinoscriptsyntax as rs
+
         rs.MessageBox("OSM Import Failed:\n\n" + dialog.error_message, 0, "Error")
         return None
-        
+
     return dialog.result_path

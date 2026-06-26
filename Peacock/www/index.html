@@ -11,7 +11,6 @@
  * 
  * Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
  */
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +18,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RhinoCharts Dashboard Pro</title>
-    <!-- Use Chart.js 2.9.4 for Legacy IE11 compatibility in Rhino 7 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
     <style>
         body {
@@ -32,7 +30,6 @@
             height: 100vh;
             overflow: hidden;
         }
-        
         #sidebar {
             width: 200px;
             background-color: #1a1a1a;
@@ -42,19 +39,15 @@
             flex-direction: column;
             flex-shrink: 0;
         }
-        
         #main {
             flex-grow: 1;
             padding: 15px;
             display: flex;
             flex-direction: column;
         }
-        
         h2 { margin-top: 0; font-weight: 300; font-size: 1.1rem; color: #00d2ff; margin-bottom: 20px; }
         h3 { font-size: 0.8rem; text-transform: uppercase; color: #888; margin: 15px 0 8px 0; }
-        
         .control-group { margin-bottom: 20px; }
-        
         select, button {
             width: 100%;
             background-color: #2a2a2a;
@@ -66,11 +59,8 @@
             font-size: 0.85rem;
             cursor: pointer;
         }
-        
         select:hover, button:hover { background-color: #333; border-color: #666; }
-        
         button.active { background-color: #0084a3; border-color: #00d2ff; }
-        
         .filter-item {
             display: flex;
             align-items: center;
@@ -78,9 +68,7 @@
             font-size: 0.85rem;
             cursor: pointer;
         }
-        
         .filter-item input { margin-right: 8px; }
-        
         #stats { 
             font-size: 0.85rem; 
             color: #aaa; 
@@ -90,15 +78,12 @@
             margin-bottom: 15px;
             border-left: 3px solid #00d2ff;
         }
-        
         #chart-container { 
             flex-grow: 1; 
             position: relative; 
-            min-height: 0; /* Important for flex-grow to work inside flex columns */
+            min-height: 0; 
             width: 100%;
         }
-
-        /* HUD Mode Styles for transparent overlay */
         body.hud-mode, body.hud-mode html { 
             background: transparent !important; 
             background-color: transparent !important; 
@@ -119,7 +104,6 @@
         }
         body.hud-mode #stats { display: none !important; }
         body.hud-mode #chart-container { width: 100%; height: 100%; background: transparent !important; }
-        /* High-contrast drop shadow for legibility on transparent backgrounds */
         body.hud-mode canvas { filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 5px rgba(0,0,0,0.8)); }
         body.hud-mode h2 { display: none !important; }
     </style>
@@ -130,7 +114,6 @@
         <div id="selection-badge" style="background: rgba(46, 204, 113, 0.2); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; color: #2ecc71; margin-bottom: 15px; text-align: center; border: 1px solid rgba(46, 204, 113, 0.3);">
             0 objects tracked
         </div>
-        
         <h3>Chart Type</h3>
         <div class="control-group">
             <select id="chartType">
@@ -140,7 +123,6 @@
                 <option value="pie">Pie (Last Obj)</option>
             </select>
         </div>
-        
         <h3>Properties</h3>
         <div class="control-group" id="filterList">
             <label class="filter-item"><input type="checkbox" value="Area" checked> Area</label>
@@ -148,7 +130,6 @@
             <label class="filter-item"><input type="checkbox" value="Z-Height" checked> Z-Height</label>
             <label class="filter-item"><input type="checkbox" value="Length" checked> Length</label>
         </div>
-        
         <h3>Actions</h3>
         <div class="control-group">
             <button id="viewportBtn" style="background-color: #51e898; color: #121212; font-weight: bold;">View in Viewport</button>
@@ -158,9 +139,7 @@
             <button id="clearBtn" style="color: #ff6b6b;">Clear Selection</button>
         </div>
     </div>
-    
     <div id="main">
-        <!-- HUD Header (only visible in HUD mode) -->
         <div id="hud-header" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 5px; cursor: move; user-select: none; border-radius: 4px; padding: 2px 8px;">
             <div id="hud-drag-handle" style="font-size: 0.75rem; font-weight: bold; color: #00d2ff; flex-grow: 1;">RhinoCharts HUD (Drag)</div>
         </div>
@@ -169,13 +148,10 @@
             <canvas id="myChart"></canvas>
         </div>
     </div>
-
     <script>
-        // Use ES5 syntax for IE11 compatibility
         var myChart = null;
-        window.currentObjects = []; // Explicitly attached to window for Python bridge
+        window.currentObjects = []; 
         var isPaused = false;
-        
         var bgColors = [
             'rgba(0, 210, 255, 0.4)',
             'rgba(255, 107, 107, 0.4)',
@@ -185,7 +161,6 @@
             'rgba(255, 159, 64, 0.4)',
             'rgba(75, 192, 192, 0.4)'
         ];
-        
         var borderColors = [
             'rgba(0, 210, 255, 1)',
             'rgba(255, 107, 107, 1)',
@@ -195,51 +170,38 @@
             'rgba(255, 159, 64, 1)',
             'rgba(75, 192, 192, 1)'
         ];
-
-        // Check for HUD mode via URL parameter
         if (window.location.search.indexOf('hud=true') !== -1) {
             document.body.className = "hud-mode";
             document.getElementById('hud-header').style.display = 'flex';
-            
-            // HUD Drag Logic (Calculates movement inside browser and tells Python)
             var isDragging = false;
             var startX, startY;
             var dragHandle = document.getElementById('hud-header');
-            
             dragHandle.onmousedown = function(e) {
                 isDragging = true;
                 startX = e.screenX;
                 startY = e.screenY;
-                return false; // Prevent selection
+                return false; 
             };
-            
             window.onmousemove = function(e) {
                 if (!isDragging) return;
                 var dx = e.screenX - startX;
                 var dy = e.screenY - startY;
-                
                 if (dx !== 0 || dy !== 0) {
-                    // Send move command to Python with absolute timestamp to force title change event
                     document.title = "MOVE:" + dx + "," + dy + "|" + new Date().getTime();
                     startX = e.screenX;
                     startY = e.screenY;
                 }
             };
-            
             window.onmouseup = function() {
                 isDragging = false;
             };
         }
-
-
         function initChart(type) {
             if (myChart) {
                 myChart.destroy();
             }
-            
             var ctx = document.getElementById('myChart').getContext('2d');
             var isRadial = (type === 'pie' || type === 'radar');
-            
             var options = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -261,20 +223,15 @@
                     }]
                 }
             };
-
             myChart = new Chart(ctx, {
                 type: type,
                 data: { labels: [], datasets: [] },
                 options: options
             });
-            
             renderData();
         }
-
         function renderData() {
             if (!window.currentObjects || window.currentObjects.length === 0 || !myChart) return;
-            
-            // 1. Get Active Filters (Categories)
             var checkboxes = document.getElementById('filterList').getElementsByTagName('input');
             var activeCategories = [];
             for (var i = 0; i < checkboxes.length; i++) {
@@ -282,21 +239,14 @@
                     activeCategories.push(checkboxes[i].value);
                 }
             }
-            
             myChart.data.labels = activeCategories;
             myChart.data.datasets = [];
-            
-            // 2. Create one dataset per object
             for (var k = 0; k < window.currentObjects.length; k++) {
                 var obj = window.currentObjects[k];
                 var dataPoints = [];
-                
-                // Map object properties to active categories
                 for (var c = 0; c < activeCategories.length; c++) {
                     var category = activeCategories[c];
                     var value = 0;
-                    
-                    // Find value in object's labels
                     for (var l = 0; l < obj.labels.length; l++) {
                         if (obj.labels[l] === category) {
                             value = obj.values[l];
@@ -305,9 +255,7 @@
                     }
                     dataPoints.push(value);
                 }
-                
                 var colorIdx = k % bgColors.length;
-                
                 myChart.data.datasets.push({
                     label: obj.name || ('Object ' + (k + 1)),
                     data: dataPoints,
@@ -316,28 +264,19 @@
                     borderWidth: 1,
                     fill: (myChart.config.type === 'line' ? false : true)
                 });
-                
-                // For Pie chart, we only show the first object because a multi-object pie is confusing
                 if (myChart.config.type === 'pie') break;
             }
-            
             myChart.update();
         }
-
-        // Global function called by Rhino
         window.updateChart = function(payload) {
             if (isPaused) return;
-            
             window.currentObjects = payload.objects || [];
-            
-            // Update Selection Badge
             var badge = document.getElementById('selection-badge');
             if (badge) {
                 var count = window.currentObjects.length;
                 badge.innerText = count + " object" + (count !== 1 ? "s" : "") + " tracked";
                 badge.style.opacity = count > 0 ? "1" : "0.5";
             }
-
             var count = window.currentObjects.length;
             var statsText = count + " object(s) selected.";
             if (count > 0) {
@@ -346,48 +285,35 @@
                 statsText = "No objects selected. Select geometry in Rhino.";
             }
             document.getElementById('stats').innerText = statsText;
-            
             renderData();
         };
-
-        // Added for reliable Python bridge (Title Bridge)
         window.requestDataDump = function() {
             try {
                 var payload = {
                     objects: window.currentObjects || [],
-                    timestamp: new Date().getTime() // Force uniqueness
+                    timestamp: new Date().getTime() 
                 };
                 var data = JSON.stringify(payload);
-                
-                // Signal Python that a data dump is arriving
-                // We use a prefix to help Python identify the payload
                 document.title = "DUMP:" + data;
-                
                 console.log("RhinoCharts: Data dump pushed to title bridge.");
             } catch(e) {
                 document.title = "ERROR:" + e.message;
             }
         };
-
         window.getDataForOverlay = function() {
              return JSON.stringify({objects: window.currentObjects || []});
         };
-
-        // UI Event Listeners
         document.getElementById('chartType').onchange = function() {
             initChart(this.value);
         };
-        
         document.getElementById('filterList').onchange = function() {
             renderData();
         };
-        
         document.getElementById('pauseBtn').onclick = function() {
             isPaused = !isPaused;
             this.innerText = isPaused ? "Resume Updates" : "Pause Updates";
             this.className = isPaused ? "active" : "";
         };
-        
         function chunkString(str, length) {
             var chunks = [];
             for (var i = 0; i < str.length; i += length) {
@@ -395,40 +321,32 @@
             }
             return chunks;
         }
-
         var isHudActive = false;
         document.getElementById('viewportBtn').onclick = function() {
             if (isHudActive) {
-                // TOGGLE OFF: Close the HUD
                 document.title = "CLOSE_HUD";
                 isHudActive = false;
                 this.innerText = "View in Viewport Overlay";
-                this.className = ""; // Reset to default
+                this.className = ""; 
             } else {
-                // TOGGLE ON: Open/Update the HUD
                 if (!window.currentObjects || window.currentObjects.length === 0) {
                     alert('Please select objects in Rhino first.');
                     return;
                 }
-                
                 if (window.requestDataDump) {
                     window.requestDataDump();
                 }
-                
                 isHudActive = true;
                 this.innerText = "Hide Viewport Overlay";
-                this.className = "active"; // Style as active
+                this.className = "active"; 
             }
         };
-
         document.getElementById('setLocBtn').onclick = function() {
             document.title = "SET_LOCATION";
         };
-
         document.getElementById('reloadBtn').onclick = function() {
             document.title = "RELOAD";
         };
-
         document.getElementById('clearBtn').onclick = function() {
             window.currentObjects = [];
             document.getElementById('stats').innerText = "Cleared. Select objects in Rhino.";
@@ -438,8 +356,6 @@
                 myChart.update();
             }
         };
-
-        // Initialize
         initChart('bar');
     </script>
 </body>

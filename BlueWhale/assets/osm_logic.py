@@ -1,20 +1,13 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
 import math
-import Rhino.Geometry as rg  # type: ignore
+import Rhino.Geometry as rg
 
-# Constants for WGS84 Mercator projection
 EARTH_RADIUS = 6378137.0
+
 
 def lat_to_meters(lat):
     """
@@ -23,11 +16,13 @@ def lat_to_meters(lat):
     lat_rad = math.radians(lat)
     return EARTH_RADIUS * math.log((math.sin(lat_rad) + 1.0) / math.cos(lat_rad))
 
+
 def lon_to_meters(lon):
     """
     Converts longitude (degrees) to X coordinate (meters).
     """
     return EARTH_RADIUS * math.radians(lon)
+
 
 def meters_to_lat(y):
     """
@@ -35,11 +30,13 @@ def meters_to_lat(y):
     """
     return math.degrees(2.0 * math.atan(math.exp(y / EARTH_RADIUS)) - math.pi / 2.0)
 
+
 def meters_to_lon(x):
     """
     Converts X coordinate (meters) to longitude (degrees).
     """
     return math.degrees(x / EARTH_RADIUS)
+
 
 def get_compound_matrix(old_matrix_str, new_matrix):
     """
@@ -48,22 +45,20 @@ def get_compound_matrix(old_matrix_str, new_matrix):
     """
     if not old_matrix_str:
         return new_matrix
-    
+
     try:
-        # Assuming old_matrix_str corresponds to the string representation of a Rhino Transform
-        # We need a way to parse the string back to a matrix. 
-        # For now, let's assume we use the helper from Transformations.py
         from assets.Transformations import string_to_matrix
+
         old_matrix = string_to_matrix(old_matrix_str)
         if not old_matrix:
             return new_matrix
-            
-        # Compound: Result = New * Old (apply Old then apply New)
+
         combined = new_matrix * old_matrix
         return combined
     except Exception as e:
         print("Error compounding matrices: {0}".format(e))
         return new_matrix
+
 
 def calculate_localization_transform(bounding_box):
     """

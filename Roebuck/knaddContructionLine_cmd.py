@@ -1,40 +1,28 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-import rhinoscriptsyntax as rs  # type: ignore
-import Rhino  # type: ignore
-import System.Drawing.Color  # type: ignore
+import rhinoscriptsyntax as rs
+import Rhino
+import System.Drawing.Color
 
 def RunCommand( is_interactive ):
 
 
 print("Executing " + __commandname__)
 
-    #get the first point
     point_a = rs.GetPoint("Pick First Point")
     if point_a:
         addConstructionLine(point_a)
 
 def addConstructionLine(point_a):
-    # Color to use when drawing dynamic lines
     line_color_1 = System.Drawing.Color.FromArgb(200,200,200)
     line_color_2 = System.Drawing.Color.FromArgb(255,0,0)
 
-    # This is a function that is called whenever the GetPoint's
-    # DynamicDraw event occurs
     def GetPointDynamicDrawFunc( sender, args ):
         point_b = args.CurrentPoint
         point_C = Rhino.Geometry.Point3d((point_a.X + point_b.X)/2, (point_a.Y + point_b.Y)/2, (point_a.Z + point_b.Z)/2)
-        #Rhino.Geometry.Transform.Translation(
         vec = rs.VectorCreate(point_b, point_a)
         rs.VectorUnitize(vec)
         vec2 = rs.VectorScale(vec, 500)
@@ -47,8 +35,6 @@ def addConstructionLine(point_a):
         args.Display.DrawPoint(point_a,Rhino.Display.PointStyle.ControlPoint,3,line_color_1)
         args.Display.DrawPoint(point_b,Rhino.Display.PointStyle.ControlPoint,3,line_color_2)
 
-    # Create an instance of a GetPoint class and add a delegate
-    # for the DynamicDraw event
     gp = Rhino.Input.Custom.GetPoint()
     gp.DynamicDraw += GetPointDynamicDrawFunc
     gp.Get()
@@ -61,7 +47,6 @@ def addConstructionLine(point_a):
 
 
 if( __name__ == "__main__" ):
-    #get the first point
     point_a = rs.GetPoint("Pick First Point")
     if point_a:
         addConstructionLine(point_a)

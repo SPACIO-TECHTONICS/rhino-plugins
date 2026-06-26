@@ -1,26 +1,16 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-# WireframeDisplay
-# ver 1.00
-# 
 
 
 import System.Guid, System.Drawing.Color
-import Rhino.DocObjects as rd  # type: ignore
-import Rhino as r  # type: ignore
-import Rhino.Geometry  # type: ignore
-import scriptcontext as sc  # type: ignore
-import rhinoscriptsyntax as rs  # type: ignore
+import Rhino.DocObjects as rd
+import Rhino as r
+import Rhino.Geometry
+import scriptcontext as sc
+import rhinoscriptsyntax as rs
 
 __commandname__ = "knWireframeDisplay"
 

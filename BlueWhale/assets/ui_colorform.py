@@ -1,21 +1,14 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-import Rhino.UI  # type: ignore
-import Eto.Drawing as drawing  # type: ignore
-import Eto.Forms as forms  # type: ignore
-import rhinoscriptsyntax as rs  # type: ignore
+import Rhino.UI
+import Eto.Drawing as drawing
+import Eto.Forms as forms
+import rhinoscriptsyntax as rs
 import random
-import scriptcontext as sc  # type: ignore
+import scriptcontext as sc
 import osm_utilities as osm
 
 
@@ -24,11 +17,9 @@ class ColorForm(forms.Dialog):
         self.Title = title
         self.ClientSize = drawing.Size(500, 300)
         self.controls = {}
-        #self.counter = 3  # Initial value for the counter
         self.counter = len(keys)
-        self.new_rows = {}  # Dictionary to store new rows
+        self.new_rows = {}
 
-        # Create form controls dynamically based on titles
         for i in range(len(keys)):
             name_box = forms.TextBox(Text=keys[i])
             color_box = forms.TextBox(Text=values[i])
@@ -69,7 +60,6 @@ class ColorForm(forms.Dialog):
         button = sender
         color_box, name_box = button.Tag
     
-        # Pass name_box to AddByPicking method
         Rhino.UI.EtoExtensions.PushPickButton(self, lambda s, a: self.AddByPicking(name_box))
     
     def AddByPicking(self, name_box):
@@ -111,21 +101,20 @@ class ColorForm(forms.Dialog):
             values[key] = box.Text
             names[key] = name_box.Text
 
-        # Include the last row with the "+" button in the stored form values
         names[None] = None
         values[None] = None
         
-        self.Tag = (names, values, self.new_rows)  # Return the new_rows dictionary as well
+        self.Tag = (names, values, self.new_rows)
         self.Close()
 
     def add_row_Click(self, sender, e):
-        self.counter += 1  # Increment the counter
+        self.counter += 1
         new_key = "Color{}".format(self.counter)
         new_value = self.generate_pastel_color()
     
-        name_box = forms.TextBox(Text=new_key)  # Set name box text and tag
+        name_box = forms.TextBox(Text=new_key)
         color_box = forms.TextBox(Text=new_value)
-        button = forms.Button(Text="Color", Tag=(color_box, name_box))  # Set text box and name box as tag
+        button = forms.Button(Text="Color", Tag=(color_box, name_box))
         remove_button = forms.Button(Text="Remove Type")
         addobjects_button = forms.Button(Text="+", Tag=(color_box, name_box))
         button.Click += self.button_Click
@@ -133,7 +122,6 @@ class ColorForm(forms.Dialog):
         addobjects_button.Click += self.OnPushPickButton
         self.controls[new_key] = (name_box, color_box, button, remove_button, addobjects_button)
     
-        # Create a new layout with the updated controls
         layout = forms.DynamicLayout()
         layout.DefaultSpacing = drawing.Size(5, 5)
         layout.Padding = drawing.Padding(10)
@@ -142,15 +130,13 @@ class ColorForm(forms.Dialog):
             name_box, text_box, button, remove_button, addobjects_button = self.controls[key]
             layout.AddRow(name_box, text_box, button, remove_button, addobjects_button)
     
-        layout.AddRow(None)  # Adds an empty row for spacing
+        layout.AddRow(None)
         layout.AddRow(self.add_row_button, self.button)
     
-        # Create a scrollable container
         scrollable_layout = forms.Scrollable()
         scrollable_layout.Content = layout
-        scrollable_layout.Border = forms.BorderType.None  # Remove border from the scrollable container
+        scrollable_layout.Border = forms.BorderType.None
     
-        # Increase the height of the scrollable container by 100 pixels
         scrollable_layout.Height += 100
     
         self.Content = scrollable_layout
@@ -160,14 +146,11 @@ class ColorForm(forms.Dialog):
     def remove_row_Click(self, sender, e):
         remove_button = sender
 
-        # Find the key associated with the remove button
         for key, (name_box, color_box, button, remove_btn,addobjects_button) in self.controls.items():
             if remove_button is remove_btn:
-                # Remove the row from the controls dictionary
                 del self.controls[key]
                 break
         
-        # Create a new layout with the updated controls
         layout = forms.DynamicLayout()
         layout.DefaultSpacing = drawing.Size(5, 5)
         layout.Padding = drawing.Padding(10)
@@ -176,21 +159,18 @@ class ColorForm(forms.Dialog):
             name_box, text_box, button, remove_button,addobjects_button = self.controls[key]
             layout.AddRow(name_box, text_box, button, remove_button,addobjects_button)
 
-        layout.AddRow(None)  # Adds an empty row for spacing
+        layout.AddRow(None)
         layout.AddRow(self.add_row_button, self.button)
 
-        # Create a scrollable container
         scrollable_layout = forms.Scrollable()
         scrollable_layout.Content = layout
-        scrollable_layout.Border = forms.BorderType.None  # Remove border from the scrollable container
+        scrollable_layout.Border = forms.BorderType.None
 
-        # Increase the height of the scrollable container by 100 pixels
         scrollable_layout.Height += 100
 
         self.Content = scrollable_layout
         
     def generate_pastel_color(self):
-        # Generate random RGB values in the range [64, 223] to create pastel colors
         r = random.randint(64, 223)
         g = random.randint(64, 223)
         b = random.randint(64, 223)
@@ -207,7 +187,6 @@ class ColorForm(forms.Dialog):
                     if type:
                         color = rs.GetDocumentUserText("URBAN3d::Type::{}".format(type))
                         color = tuple(int(x) for x in color.split(',') if x.isdigit())
-                        #print color
                         rs.ObjectColor(obj,osm.tuple_to_color(color))
     
     
@@ -215,10 +194,8 @@ class ColorForm(forms.Dialog):
 
 
 def show_eto_form_with_colors(title, keys, values):
-    # Create an instance of the dialog
     dialog = ColorForm(title, keys, values)
     
-    # Show the dialog
     dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
 
     
@@ -228,10 +205,8 @@ def show_eto_form_with_colors(title, keys, values):
     else:
         return
 
-    # Return the form values
     
 
-# Test sample
 keys = ["Color1", "Color2", "Color3","lol"]
 values = ["255, 0, 0", "0, 255, 0", "0, 0, 255","0,0,0"]
 

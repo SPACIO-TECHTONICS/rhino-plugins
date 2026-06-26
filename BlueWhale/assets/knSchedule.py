@@ -1,34 +1,39 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
 from __future__ import print_function
-import Rhino as rc  # type: ignore
-import Rhino.UI  # type: ignore
-import Rhino.Geometry as rg  # type: ignore
-import Eto.Drawing as drawing  # type: ignore
-import Eto.Forms as forms  # type: ignore
-import rhinoscriptsyntax as rs  # type: ignore
-import scriptcontext as sc  # type: ignore
+import Rhino as rc
+import Rhino.UI
+import Rhino.Geometry as rg
+import Eto.Drawing as drawing
+import Eto.Forms as forms
+import rhinoscriptsyntax as rs
+import scriptcontext as sc
 import os.path as op
-import System.Drawing.Color as color  # type: ignore
+import System.Drawing.Color as color
 
 Show
 
-class Parameter():
-    def __init__(self, tabl, name, num, alignment = forms.TextAlignment.Left, vis = False, edit = False, totalable = False, units = None, is_float = False, superscript = ''):
+
+class Parameter:
+    def __init__(
+        self,
+        tabl,
+        name,
+        num,
+        alignment=forms.TextAlignment.Left,
+        vis=False,
+        edit=False,
+        totalable=False,
+        units=None,
+        is_float=False,
+        superscript="",
+    ):
         self.tabl = tabl
         self.name = name
-        
-        #Columns Tabl_
+
         self.colNum = num
         self.col = forms.GridColumn()
         self.col.Visible = vis
@@ -37,36 +42,35 @@ class Parameter():
         self.col.DataCell.TextAlignment = alignment
         self.col.Sortable = True
         self.col.Editable = edit
-        
-        #Checkbox
+
         self.checkBox = forms.CheckBox()
         self.checkBox.Text = name
         self.checkBox.Checked = vis
         self.checkBox.CheckedChanged += self.onCheckboxChanged
-        
-        #Other
+
         self.sortDescending = True
         self.totalable = totalable
         self.units = units
         self.superscript = superscript
         self.is_float = is_float
-        
+
         self.formula = None
-    
+
     def onCheckboxChanged(self, sender, e):
         try:
             self.col.Visible = self.checkBox.Checked
         except:
             print("onCheckboxChanged() failed")
 
-class Settings():
+
+class Settings:
     def __init__(self):
         self.version = "Version 0.2"
         self.dialogPosX = 100
         self.dialogPosY = 100
         self.dialogWidth = 600
         self.dialogHeight = 700
-        
+
         self.guids = []
         self.objs = []
         self.parameters = []
@@ -78,56 +82,57 @@ class Settings():
         self.showHeaders = True
         self.updateMode = 1
         self.unitScale = 1
-        self.customUnit = ''
-        
+        self.customUnit = ""
+
         self.sortingBy = 0
-        
+
         self.place_Type = 0
         self.place_BufferSize = 2
         self.place_ColWidth = 100
         self.place_TableWidth = 30
 
+
 class SettingsDialog(forms.Dialog):
     def __init__(self, settings):
-        #Variables
         self.settings = settings
         self.Title = "Settings"
         self.Padding = drawing.Padding(5)
         self.Resizable = False
         self.CreateLayout()
-        
-        #Icon
+
         path = rc.PlugIns.PlugIn.PathFromName("Schedule")
         dirName = op.dirname(path)
         try:
-            iconPath = op.join(dirName, r'main.ico')
+            iconPath = op.join(dirName, r"main.ico")
             self.Icon = drawing.Icon(iconPath)
         except:
             print("Could not load mainIcon.ico")
 
     def CreateLayout(self):
         self.CreateControls()
-        self.colorFormatGroup = forms.GroupBox(Text = "Color Format")
+        self.colorFormatGroup = forms.GroupBox(Text="Color Format")
         self.colorFormatLayout = forms.DynamicLayout()
         self.colorFormatLayout.AddSeparateRow(self.colorRadioBtn, None)
         self.colorFormatGroup.Content = self.colorFormatLayout
 
-        self.numFormatGroup = forms.GroupBox(Text = "Number Format")
+        self.numFormatGroup = forms.GroupBox(Text="Number Format")
         self.numFormatLayout = forms.DynamicLayout()
         self.numFormatLayout.Spacing = drawing.Size(5, 5)
         self.numFormatLayout.AddSeparateRow(self.label1, None, self.numericDecPlaces)
         self.numFormatLayout.AddSeparateRow(self.label2, None, self.seperatorDropDown)
         self.numFormatGroup.Content = self.numFormatLayout
-        
-        ########################################################################
-        #Groupbox - Custom Scales
-        self.customScaleGroup = forms.GroupBox(Text = "Custom Units")
+
+        self.customScaleGroup = forms.GroupBox(Text="Custom Units")
         self.customScaleLayout = forms.DynamicLayout()
         self.customScaleLayout.Spacing = drawing.Size(5, 5)
-        self.customScaleLayout.AddSeparateRow(self.labelScaleUnits, None, self.numericScaleUnits)
-        self.customScaleLayout.AddSeparateRow(self.labelCustomUnit, None, self.txtCustomUnits)
+        self.customScaleLayout.AddSeparateRow(
+            self.labelScaleUnits, None, self.numericScaleUnits
+        )
+        self.customScaleLayout.AddSeparateRow(
+            self.labelCustomUnit, None, self.txtCustomUnits
+        )
         self.customScaleGroup.Content = self.customScaleLayout
-        
+
         layout = forms.DynamicLayout()
         layout.AddSeparateRow(self.numFormatGroup, None)
         layout.AddSeparateRow(self.colorFormatGroup)
@@ -143,72 +148,71 @@ class SettingsDialog(forms.Dialog):
     def CreateControls(self):
         self.label1 = forms.Label()
         self.label1.Text = "Decimal Places"
-        
+
         self.labelScaleUnits = forms.Label()
         self.labelScaleUnits.Text = "Scale Units"
-        
+
         self.labelCustomUnit = forms.Label()
         self.labelCustomUnit.Text = "Custom Unit Name"
-        
+
         self.label2 = forms.Label()
         self.label2.Text = "Thousands Separator\t"
-        
+
         self.versionLabel = forms.Label()
         self.versionLabel.Text = "     " + self.settings.version
-        
+
         self.btnApply = forms.Button()
         self.btnApply.Text = "OK"
         self.btnApply.Click += self.OnApplySettings
-        
+
         self.btnCancel = forms.Button()
         self.btnCancel.Text = "Cancel"
         self.btnCancel.Click += self.OnCancelSettings
-        ########################################################################
-        #Seperator
         self.seperatorDropDown = forms.DropDown()
-        self.seperatorDropDown.DataStore = ['None','Comma\t","', 'Dot\t"."', 'Space\t" "']
+        self.seperatorDropDown.DataStore = [
+            "None",
+            'Comma\t","',
+            'Dot\t"."',
+            'Space\t" "',
+        ]
         self.seperatorDropDown.SelectedIndex = self.settings.commaSep
-        
-        #Dec Places
+
         self.numericDecPlaces = forms.NumericUpDown()
-        self.numericDecPlaces.DecimalPlaces  = 0
+        self.numericDecPlaces.DecimalPlaces = 0
         self.numericDecPlaces.MaxValue = 8
         self.numericDecPlaces.MinValue = 0
         self.numericDecPlaces.Value = self.settings.decPlaces
-        self.numericDecPlaces.ToolTip = "Changes the number of decimal places to display"
-        
-        #Color Format
+        self.numericDecPlaces.ToolTip = (
+            "Changes the number of decimal places to display"
+        )
+
         self.colorRadioBtn = forms.RadioButtonList()
         self.colorRadioBtn.DataStore = ["Name", "R-G-B", "R,G,B"]
         self.colorRadioBtn.Orientation = forms.Orientation.Vertical
         self.colorRadioBtn.SelectedIndex = self.settings.colorFormat
-        
-        #Scale Units
+
         self.numericScaleUnits = forms.NumericUpDown()
-        self.numericScaleUnits.DecimalPlaces  = 6
+        self.numericScaleUnits.DecimalPlaces = 6
         self.numericScaleUnits.MaxValue = 99999
         self.numericScaleUnits.MinValue = -1
         self.numericScaleUnits.Value = self.settings.unitScale
-        self.numericScaleUnits.ToolTip = "Multiplies length by this value, squares area, and cubes volume"
-        
+        self.numericScaleUnits.ToolTip = (
+            "Multiplies length by this value, squares area, and cubes volume"
+        )
+
         self.txtCustomUnits = forms.TextBox()
         self.txtCustomUnits.Text = self.settings.customUnit
         self.txtCustomUnits.TextAlignment = forms.TextAlignment.Right
-        #self.txtCustomUnits.Increment = 1
-        
-        ########################################################################
-        #Radiobutton - Auto-manual
+
         self.updateModeRadio = forms.RadioButtonList()
         self.updateModeRadio.DataStore = ["Automatic", "Manual"]
         self.updateModeRadio.Orientation = forms.Orientation.Vertical
         self.updateModeRadio.SelectedIndex = self.settings.updateMode
-        
-        ########################################################################
-        #Groupbox - Radio - Update
-        self.updateModeGroup = forms.GroupBox(Text = "Update")
+
+        self.updateModeGroup = forms.GroupBox(Text="Update")
         self.updateModeGroup.Padding = drawing.Padding(5)
         self.updateModeGroup.Content = self.updateModeRadio
-        
+
     def OnApplySettings(self, sender, e):
         try:
             self.settings.decPlaces = self.numericDecPlaces.Value
@@ -217,7 +221,7 @@ class SettingsDialog(forms.Dialog):
             self.settings.updateMode = self.updateModeRadio.SelectedIndex
             self.settings.unitScale = self.numericScaleUnits.Value
             if self.txtCustomUnits.Text.isspace():
-                self.settings.customUnit = ''
+                self.settings.customUnit = ""
             else:
                 self.settings.customUnit = self.txtCustomUnits.Text
             self.Result = True
@@ -232,44 +236,45 @@ class SettingsDialog(forms.Dialog):
         except:
             print("Failed to cancel settings")
 
+
 class PlaceDialog(forms.Dialog):
     def __init__(self, currentData, settings):
         self.settings = settings
         self.data = currentData
-        #Variables
         self.Title = "Place Settings"
         self.Padding = drawing.Padding(5)
         self.Resizable = False
         self.CreateLayout()
-        
-        #Icon Tabl_
+
         path = rc.PlugIns.PlugIn.PathFromName("Schedule")
         dirName = op.dirname(path)
         try:
-            iconPath = op.join(dirName, r'main.ico')
+            iconPath = op.join(dirName, r"main.ico")
             self.Icon = drawing.Icon(iconPath)
         except:
             print("Could not load mainIcon.ico")
-    
+
     def CreateLayout(self):
         self.CreateControls()
-        
-        self.typeRadioGroup = forms.GroupBox(Text = "Column Size")
+
+        self.typeRadioGroup = forms.GroupBox(Text="Column Size")
         self.typeRadioLayout = forms.DynamicLayout()
         self.typeRadioLayout.AddSeparateRow(self.PlaceTypeRadio, None)
         self.typeRadioGroup.Content = self.typeRadioLayout
-        
-        self.placeFormatGroup = forms.GroupBox(Text = "Spacing")
+
+        self.placeFormatGroup = forms.GroupBox(Text="Spacing")
         self.placeFormatLayout = forms.DynamicLayout()
-        self.placeFormatLayout.AddSeparateRow(self.bufferUpDown,self.bufferUpDownLbl, None)
+        self.placeFormatLayout.AddSeparateRow(
+            self.bufferUpDown, self.bufferUpDownLbl, None
+        )
         self.placeFormatGroup.Content = self.placeFormatLayout
-        
+
         layout = forms.DynamicLayout()
         layout.AddSeparateRow(self.typeRadioGroup)
         layout.AddSeparateRow(self.placeFormatGroup)
         layout.AddSeparateRow(None, self.btnCancel, self.PlaceBtn)
         self.Content = layout
-    
+
     def CreateControls(self):
         self.PlaceBtn = forms.Button()
         self.PlaceBtn.Text = "Place"
@@ -279,21 +284,21 @@ class PlaceDialog(forms.Dialog):
         self.btnCancel = forms.Button()
         self.btnCancel.Text = "Cancel"
         self.btnCancel.Click += self.OnCancelSettings
-        
-        
-        self.bufferUpDownLbl = forms.Label(Text = " Buffer Size")
+
+        self.bufferUpDownLbl = forms.Label(Text=" Buffer Size")
         self.bufferUpDown = forms.NumericUpDown()
         self.bufferUpDown.DecimalPlaces = 2
-        self.bufferUpDown.Increment = .1
+        self.bufferUpDown.Increment = 0.1
         self.bufferUpDown.MinValue = 0
         self.bufferUpDown.Value = self.settings.place_BufferSize
-        
+
         self.PlaceTypeRadio = forms.RadioButtonList()
         self.PlaceTypeRadio.DataStore = [
-        "Fit Columns To Data", 
-        "Fit Columns To Table Width",
-        "Fixed Table Width (Divide Even)", 
-        "Fixed Column Width"]
+            "Fit Columns To Data",
+            "Fit Columns To Table Width",
+            "Fixed Table Width (Divide Even)",
+            "Fixed Column Width",
+        ]
         self.PlaceTypeRadio.Orientation = forms.Orientation.Vertical
         self.PlaceTypeRadio.SelectedIndex = self.settings.place_Type
 
@@ -303,7 +308,6 @@ class PlaceDialog(forms.Dialog):
         except:
             print("Failed to cancel settings")
 
-    #Place Table
     def OnPlace(self, sender, e):
         try:
             self.Close()
@@ -313,7 +317,7 @@ class PlaceDialog(forms.Dialog):
                 self.settings.place_BufferSize = self.bufferUpDown.Value
         except:
             print("PlaceTable failed")
-    
+
     def PlaceTable(self, type):
         """
         Places Tabl according to type specified.
@@ -322,7 +326,7 @@ class PlaceDialog(forms.Dialog):
         Type 2 = Fixed Table Width
         Type 3 = Fixed Column Width
         """
-        
+
         def placeTable_FitWidth(dataLen, bufferSize):
             minColWidths = []
             transposed = zip(*dataLen)
@@ -333,12 +337,12 @@ class PlaceDialog(forms.Dialog):
                         minColWidth = param
                 minColWidths.append(minColWidth)
             return minColWidths
-        
+
         def placeTable_FitWidthToTable(tableWidth, dataLen, bufferSize):
-            def mapFromTo(x,a,b,c,d):
-                y=(x-a)/(b-a)*(d-c)+c
+            def mapFromTo(x, a, b, c, d):
+                y = (x - a) / (b - a) * (d - c) + c
                 return y
-            
+
             minColWidths = []
             colWidths = []
             transposed = zip(*dataLen)
@@ -355,7 +359,7 @@ class PlaceDialog(forms.Dialog):
                 tempWidth = mapFromTo(width, 0, count, 0, tableWidth)
                 colWidths.append(tempWidth)
             return colWidths
-        
+
         def placeTable_FixedTableWidth(tableWidth, dataLen):
             fixedWidths = []
             transposed = zip(*dataLen)
@@ -363,62 +367,59 @@ class PlaceDialog(forms.Dialog):
             for each in transposed:
                 count += 1
             numCols = count
-            fixedWidth = tableWidth/numCols
+            fixedWidth = tableWidth / numCols
             for item in transposed:
                 fixedWidths.append(fixedWidth)
             return fixedWidths
-        
+
         def placeTable_FixedColWidth(fixedWidth, dataLen):
             fixedWidths = []
             transposed = zip(*dataLen)
             for item in transposed:
                 fixedWidths.append(fixedWidth)
             return fixedWidths
-        
+
         def GetRectangleLocation(width, height, bufferWidth, bufferHeight, type):
-            def GetPointDynamicDrawFunc( sender, args ):
+            def GetPointDynamicDrawFunc(sender, args):
                 tempWidth = width
                 tempHeight = height
-                
+
                 if sc.doc.Views.ModelSpaceIsActive:
                     if type == 0:
                         tempWidth *= sc.doc.ActiveDoc.DimStyles.Current.DimensionScale
                     tempHeight *= sc.doc.ActiveDoc.DimStyles.Current.DimensionScale
-                
+
                 tempWidth += bufferWidth
                 tempHeight += bufferHeight
-                
+
                 xLoc = args.CurrentPoint[0]
                 yLoc = args.CurrentPoint[1]
                 zLoc = args.CurrentPoint[2]
-                pt0 = rg.Point3d(xLoc,yLoc,zLoc)
-                pt1 = rg.Point3d(xLoc+tempWidth,yLoc,zLoc)
-                pt2 = rg.Point3d(xLoc+tempWidth,yLoc-tempHeight,zLoc)
-                pt3 = rg.Point3d(xLoc,yLoc-tempHeight,zLoc)
+                pt0 = rg.Point3d(xLoc, yLoc, zLoc)
+                pt1 = rg.Point3d(xLoc + tempWidth, yLoc, zLoc)
+                pt2 = rg.Point3d(xLoc + tempWidth, yLoc - tempHeight, zLoc)
+                pt3 = rg.Point3d(xLoc, yLoc - tempHeight, zLoc)
                 args.Display.DrawPolyline([pt0, pt1, pt2, pt3, pt0], color.Gray, 1)
-            
+
             gp = Rhino.Input.Custom.GetPoint()
             gp.SetCommandPrompt("Choose point to place Schedule")
             gp.DynamicDraw += GetPointDynamicDrawFunc
             gp.Get()
-            
-            if (gp.CommandResult() == Rhino.Commands.Result.Success):
+
+            if gp.CommandResult() == Rhino.Commands.Result.Success:
                 pt = gp.Point()
                 modelSpace = False
                 if sc.doc.Views.ModelSpaceIsActive:
                     modelSpace = True
                 return pt, modelSpace
-        
-        #Variables
+
         textHeight = sc.doc.ActiveDoc.DimStyles.Current.TextHeight
         bufferSize = self.bufferUpDown.Value
-        
-        #Check if any data
+
         if len(self.data) == 0:
             print("No data to place")
             return None
-        
-        #Get text alignment
+
         alignments = []
         for parameter in self.settings.parameters:
             if parameter.col.Visible:
@@ -428,21 +429,19 @@ class PlaceDialog(forms.Dialog):
                     alignments.append(rg.TextJustification.Center)
                 elif parameter.col.DataCell.TextAlignment == forms.TextAlignment.Right:
                     alignments.append(rg.TextJustification.Right)
-        
-        #Cleanup Data
+
         cleanData = []
         for item in self.data:
             tempList = []
             for param in item:
                 if param is None:
                     tempList.append(" ")
-                elif len(str(param))<1:
+                elif len(str(param)) < 1:
                     tempList.append(" ")
                 else:
                     tempList.append(str(param).rstrip())
             cleanData.append(tempList)
-        
-        #Get textWidths
+
         textWidths = []
         plane = rg.Plane.WorldXY
         dimStyle = sc.doc.ActiveDoc.DimStyles.CurrentDimensionStyle
@@ -450,69 +449,76 @@ class PlaceDialog(forms.Dialog):
             itemLen = []
             for param in item:
                 text = str(param)
-                textObj = rg.TextEntity.Create(text, plane, dimStyle, False,0,0)
+                textObj = rg.TextEntity.Create(text, plane, dimStyle, False, 0, 0)
                 length = textObj.TextModelWidth
                 itemLen.append(length)
             textWidths.append(itemLen)
-        
-        #Get colWidths
+
         if type == 0:
             colWidths = placeTable_FitWidth(textWidths, bufferSize)
         if type == 1:
-            tableWidth = rs.GetReal("Table Width", number = self.settings.place_TableWidth, minimum = 1)
-            if tableWidth is None: return None
+            tableWidth = rs.GetReal(
+                "Table Width", number=self.settings.place_TableWidth, minimum=1
+            )
+            if tableWidth is None:
+                return None
             self.settings.place_TableWidth = tableWidth
             colWidths = placeTable_FitWidthToTable(tableWidth, textWidths, bufferSize)
         if type == 2:
-            tableWidth = rs.GetReal("Table Width", number = self.settings.place_TableWidth, minimum = 1)
-            if tableWidth is None: return None
+            tableWidth = rs.GetReal(
+                "Table Width", number=self.settings.place_TableWidth, minimum=1
+            )
+            if tableWidth is None:
+                return None
             self.settings.place_TableWidth = tableWidth
             colWidths = placeTable_FixedTableWidth(tableWidth, textWidths)
         if type == 3:
-            fixedWidth = rs.GetReal("Column Width", number = self.settings.place_ColWidth, minimum = 1)
-            if fixedWidth is None: return None
+            fixedWidth = rs.GetReal(
+                "Column Width", number=self.settings.place_ColWidth, minimum=1
+            )
+            if fixedWidth is None:
+                return None
             self.settings.place_ColWidth = fixedWidth
             colWidths = placeTable_FixedColWidth(fixedWidth, textWidths)
-        
-        
-        #Get Tabl width, height
+
         totalTextWidth = 0
         for col in colWidths:
             totalTextWidth += col
         totalBufferWidth = len(colWidths) * (bufferSize * 2)
         if type > 0:
             totalBufferWidth = 0
-        
+
         totalTextHeight = 0
         for each in cleanData:
             totalTextHeight += textHeight
         totalBufferHeight = len(cleanData) * (bufferSize * 2)
-        
-        #Get placePt
-        placePt, modelSpace = GetRectangleLocation(totalTextWidth,totalTextHeight, totalBufferWidth, totalBufferHeight, type)
-        if placePt is None: return None
-        
-        #Check which space it's in
+
+        placePt, modelSpace = GetRectangleLocation(
+            totalTextWidth, totalTextHeight, totalBufferWidth, totalBufferHeight, type
+        )
+        if placePt is None:
+            return None
+
         if modelSpace:
-            rowHeight = (textHeight * sc.doc.ActiveDoc.DimStyles.Current.DimensionScale) + (bufferSize*2)
-            if  type == 0:
+            rowHeight = (
+                textHeight * sc.doc.ActiveDoc.DimStyles.Current.DimensionScale
+            ) + (bufferSize * 2)
+            if type == 0:
                 for i, colWidth in enumerate(colWidths):
                     colWidth *= sc.doc.ActiveDoc.DimStyles.Current.DimensionScale
-                    colWidths[i] = colWidth + (bufferSize*2)
+                    colWidths[i] = colWidth + (bufferSize * 2)
             else:
                 for i, colWidth in enumerate(colWidths):
                     colWidths[i] = colWidth
         else:
-            #In paperspace
-            rowHeight = textHeight + (bufferSize*2)
-            if  type == 0:
+            rowHeight = textHeight + (bufferSize * 2)
+            if type == 0:
                 for i, colWidth in enumerate(colWidths):
-                    colWidths[i] = colWidth + (bufferSize*2)
+                    colWidths[i] = colWidth + (bufferSize * 2)
             else:
                 for i, colWidth in enumerate(colWidths):
                     colWidths[i] = colWidth
-        
-        #Add Text and Rectangles
+
         xLoc = placePt[0]
         yLoc = placePt[1]
         zLoc = placePt[2]
@@ -523,149 +529,182 @@ class PlaceDialog(forms.Dialog):
         rs.EnableRedraw(False)
         for i, item in enumerate(cleanData):
             for j, param in enumerate(item):
-                #Add rectangle
                 framePt = rg.Point3d(xLoc, yLoc, zLoc)
                 plane.Origin = framePt
                 width = colWidths[j]
                 height = rowHeight
                 allRect.append(rs.AddRectangle(plane, width, -height))
-                
-                #Skip text with 0 length
+
                 if len(str(param)) == 0:
                     continue
-                
-                #Justification
+
                 if i == 0 and self.settings.showHeaders == True:
-                    #HEADERS
-                    plane.Origin = rg.Point3d(xLoc+(width/2), yLoc-bufferSize, zLoc)
-                    textObject = rg.TextEntity.Create(str(param), plane, dimStyle, False,0,0)
+                    plane.Origin = rg.Point3d(
+                        xLoc + (width / 2), yLoc - bufferSize, zLoc
+                    )
+                    textObject = rg.TextEntity.Create(
+                        str(param), plane, dimStyle, False, 0, 0
+                    )
                     textObject.Justification = rg.TextJustification.Center
                     textObject.SetBold(True)
-                elif i == len(cleanData)-1 and self.settings.showTotals == True:
-                    #TOTALS
-                    plane.Origin = rg.Point3d(xLoc+width-bufferSize, yLoc-bufferSize, zLoc)
-                    textObject = rg.TextEntity.Create(str(param), plane, dimStyle, False,0,0)
+                elif i == len(cleanData) - 1 and self.settings.showTotals == True:
+                    plane.Origin = rg.Point3d(
+                        xLoc + width - bufferSize, yLoc - bufferSize, zLoc
+                    )
+                    textObject = rg.TextEntity.Create(
+                        str(param), plane, dimStyle, False, 0, 0
+                    )
                     textObject.Justification = rg.TextJustification.Right
                 else:
-                    #DATA
                     if alignments[j] == rg.TextJustification.Left:
-                        #LEFT
-                        plane.Origin = rg.Point3d(xLoc+bufferSize, yLoc-bufferSize, zLoc)
-                        textObject = rg.TextEntity.Create(str(param), plane, dimStyle, False,0,0)
+                        plane.Origin = rg.Point3d(
+                            xLoc + bufferSize, yLoc - bufferSize, zLoc
+                        )
+                        textObject = rg.TextEntity.Create(
+                            str(param), plane, dimStyle, False, 0, 0
+                        )
                         textObject.Justification = rg.TextJustification.Left
                     elif alignments[j] == rg.TextJustification.Right:
-                        #RIGHT
-                        plane.Origin = rg.Point3d(xLoc+width-bufferSize, yLoc-bufferSize, zLoc)
-                        textObject = rg.TextEntity.Create(str(param), plane, dimStyle, False,0,0)
+                        plane.Origin = rg.Point3d(
+                            xLoc + width - bufferSize, yLoc - bufferSize, zLoc
+                        )
+                        textObject = rg.TextEntity.Create(
+                            str(param), plane, dimStyle, False, 0, 0
+                        )
                         textObject.Justification = rg.TextJustification.Right
                     else:
-                        #CENTER
-                        plane.Origin = rg.Point3d(xLoc+(width/2), yLoc-bufferSize, zLoc)
-                        textObject = rg.TextEntity.Create(str(param), plane, dimStyle, False,0,0)
+                        plane.Origin = rg.Point3d(
+                            xLoc + (width / 2), yLoc - bufferSize, zLoc
+                        )
+                        textObject = rg.TextEntity.Create(
+                            str(param), plane, dimStyle, False, 0, 0
+                        )
                         textObject.Justification = rg.TextJustification.Center
-                
+
                 txt = sc.doc.Objects.AddText(textObject)
                 allText.append(txt)
-                
+
                 xLoc += colWidths[j]
             yLoc -= rowHeight
             xLoc = placePt[0]
-        
+
         rs.EnableRedraw(True)
         sc.doc.Views.Redraw()
-        if (sn > 0):
+        if sn > 0:
             sc.doc.EndUndoRecord(sn)
         return allText, allRect
 
+
 class Tabl_Form(forms.Form):
     def __init__(self):
-        ########################################################################
-        #Settings
-        if 'tabl.settings' in sc.sticky:
-            self.settings = sc.sticky['tabl.settings']
+        if "tabl.settings" in sc.sticky:
+            self.settings = sc.sticky["tabl.settings"]
         else:
             self.settings = Settings()
             self.settings.parameters = self.SetupParameters()
-        
-        #Setup Form
+
         self.Initialize()
-        
-        #Create Controls
+
         self.CreateLayout()
-        
-        #Setup Grid
+
         self.Regen()
-        
-        #Setup Events
+
         self.CreateEvents()
-    
-    #################################
+
     def SetupParameters(self):
         unit = sc.doc.GetUnitSystemName(True, False, True, True)
         parameters = []
-        parameters.append(Parameter(self, "#", len(parameters), forms.TextAlignment.Right, vis = True))
+        parameters.append(
+            Parameter(self, "
+        )
         parameters.append(Parameter(self, "GUID", len(parameters)))
-        parameters.append(Parameter(self, "Name", len(parameters), vis = True, edit = True))
-        parameters.append(Parameter(self, "Layer", len(parameters), vis = True))
-        parameters.append(Parameter(self, "Length", len(parameters), forms.TextAlignment.Right, totalable = True, units = unit, is_float = True))
-        parameters.append(Parameter(self, "Area", len(parameters), forms.TextAlignment.Right, totalable = True, units = unit, is_float = True, superscript = u'\xb2'))
-        parameters.append(Parameter(self, "Volume", len(parameters), forms.TextAlignment.Right, totalable = True, units = unit, is_float = True, superscript = u'\xb3'))
-        parameters.append(Parameter(self, "Comments", len(parameters), edit = True))
+        parameters.append(Parameter(self, "Name", len(parameters), vis=True, edit=True))
+        parameters.append(Parameter(self, "Layer", len(parameters), vis=True))
+        parameters.append(
+            Parameter(
+                self,
+                "Length",
+                len(parameters),
+                forms.TextAlignment.Right,
+                totalable=True,
+                units=unit,
+                is_float=True,
+            )
+        )
+        parameters.append(
+            Parameter(
+                self,
+                "Area",
+                len(parameters),
+                forms.TextAlignment.Right,
+                totalable=True,
+                units=unit,
+                is_float=True,
+                superscript="\xb2",
+            )
+        )
+        parameters.append(
+            Parameter(
+                self,
+                "Volume",
+                len(parameters),
+                forms.TextAlignment.Right,
+                totalable=True,
+                units=unit,
+                is_float=True,
+                superscript="\xb3",
+            )
+        )
+        parameters.append(Parameter(self, "Comments", len(parameters), edit=True))
         return parameters
-    
-    #Initialize
+
     def Initialize(self):
-        ########################################################################
-        #Form Setup
         self.Title = "Tabl_"
         self.Padding = 10
         self.Resizable = True
-        self.Location = drawing.Point(self.settings.dialogPosX, self.settings.dialogPosY)
-        self.Size = drawing.Size(self.settings.dialogWidth,self.settings.dialogHeight)
+        self.Location = drawing.Point(
+            self.settings.dialogPosX, self.settings.dialogPosY
+        )
+        self.Size = drawing.Size(self.settings.dialogWidth, self.settings.dialogHeight)
         self.MinimumSize = drawing.Size(676, 600)
         self.Closed += self.closeDialog
         self.SizeChanged += self.OnSizeChanged
         self.LocationChanged += self.OnPositionChanged
-        
-        ########################################################################
-        #Form Icon
+
         def loadImages():
             path = rc.PlugIns.PlugIn.PathFromName("Schedule")
             dirName = op.dirname(path)
             try:
-                iconPath = op.join(dirName, r'main.ico')
+                iconPath = op.join(dirName, r"main.ico")
                 self.Icon = drawing.Icon(iconPath)
-            except Exception as e:
+            except Exception:
                 print("Could not load mainIcon.ico")
 
             try:
-                addIconPath = op.join(dirName, r'add.ico')
+                addIconPath = op.join(dirName, r"add.ico")
                 self.addImage = drawing.Icon(addIconPath)
-            except Exception as e:
+            except Exception:
                 self.addImage = None
                 print("Could not load addIcon.ico")
 
             try:
-                removeIconPath = op.join(dirName, r'remove.ico')
+                removeIconPath = op.join(dirName, r"remove.ico")
                 self.removeImage = drawing.Icon(removeIconPath)
             except:
                 self.removeImage = None
                 print("Could not load removeIcon.ico")
 
             try:
-                updateIconPath = op.join(dirName, r'refresh.ico')
+                updateIconPath = op.join(dirName, r"refresh.ico")
                 self.updateImage = drawing.Icon(updateIconPath)
             except:
                 self.updateImage = None
                 print("Could not load refreshIcon.ico")
+
         loadImages()
-    
-    #Create Layout
+
     def CreateLayout(self):
-        #Create Grid, Buttons, Checkboxes, Dropdowns
         self.CreateControls()
-        ########################################################################
-        #Layout
         try:
             layout = forms.DynamicLayout()
             layout.Spacing = drawing.Size(5, 5)
@@ -677,20 +716,18 @@ class Tabl_Form(forms.Form):
 
     def CreateControls(self):
         try:
-            ########################################################################
-            #Create Menu Bar
             def createMenuBar():
-                mnuFile = forms.ButtonMenuItem(Text = "File")
+                mnuFile = forms.ButtonMenuItem(Text="File")
                 sep1 = forms.SeparatorMenuItem()
-                mnuExport = forms.ButtonMenuItem(Text = "Export as...")
+                mnuExport = forms.ButtonMenuItem(Text="Export as...")
                 mnuExport.Click += self.exportData
-                mnuClose = forms.ButtonMenuItem(Text = "Close")
+                mnuClose = forms.ButtonMenuItem(Text="Close")
                 mnuClose.Click += self.closeDialog
-                mnuNew = forms.ButtonMenuItem(Text = "Clear Tabl")
+                mnuNew = forms.ButtonMenuItem(Text="Clear Tabl")
                 mnuNew.Click += self.OnNewTable
-                mnuSaveAs = forms.ButtonMenuItem(Text = "Export GUIDs")
+                mnuSaveAs = forms.ButtonMenuItem(Text="Export GUIDs")
                 mnuSaveAs.Click += self.OnSaveTable
-                mnuOpen = forms.ButtonMenuItem(Text = "Import GUIDs")
+                mnuOpen = forms.ButtonMenuItem(Text="Import GUIDs")
                 mnuOpen.Click += self.OnOpenTable
                 sep2 = forms.SeparatorMenuItem()
                 sep3 = forms.SeparatorMenuItem()
@@ -702,29 +739,28 @@ class Tabl_Form(forms.Form):
                 mnuFile.Items.Add(mnuOpen)
                 mnuFile.Items.Add(sep3)
                 mnuFile.Items.Add(mnuClose)
-                
-                mnuEdit = forms.ButtonMenuItem(Text = "Edit")
-                mnuCopyAll = forms.ButtonMenuItem(Text = "Copy All")
+
+                mnuEdit = forms.ButtonMenuItem(Text="Edit")
+                mnuCopyAll = forms.ButtonMenuItem(Text="Copy All")
                 mnuCopyAll.Click += self.copyToClipboard
-                mnuCopySel = forms.ButtonMenuItem(Text = "Copy Selection")
+                mnuCopySel = forms.ButtonMenuItem(Text="Copy Selection")
                 mnuCopySel.Click += self.copySelectionToClipboard
                 mnuEdit.Items.Add(mnuCopyAll)
                 mnuEdit.Items.Add(mnuCopySel)
-                
-                mnuParameters = forms.ButtonMenuItem(Text = "Parameters")
-                mnuParamViewAll = forms.ButtonMenuItem(Text = "View All")
+
+                mnuParameters = forms.ButtonMenuItem(Text="Parameters")
+                mnuParamViewAll = forms.ButtonMenuItem(Text="View All")
                 mnuParamViewAll.Click += self.OnViewAll
                 mnuParameters.Items.Add(mnuParamViewAll)
-                mnuParamHideAll = forms.ButtonMenuItem(Text = "Hide All")
+                mnuParamHideAll = forms.ButtonMenuItem(Text="Hide All")
                 mnuParamHideAll.Click += self.OnHideAll
                 mnuParameters.Items.Add(mnuParamHideAll)
-                
+
                 mnuBar = forms.MenuBar(mnuFile, mnuEdit, mnuParameters)
                 self.Menu = mnuBar
-            
+
             createMenuBar()
-            
-            #GridView - Spreadsheet
+
             def createGrid():
                 self.grid = forms.GridView()
                 self.grid.BackgroundColor = drawing.Colors.LightGrey
@@ -732,30 +768,27 @@ class Tabl_Form(forms.Form):
                 self.grid.GridLines = forms.GridLines.Both
                 self.grid.Border = forms.BorderType.Line
                 self.grid.AllowMultipleSelection = True
-                self.grid.Size = drawing.Size(700,500)
+                self.grid.Size = drawing.Size(700, 500)
                 self.grid.CellEdited += self.OnNameCellChanged
                 self.grid.ColumnHeaderClick += self.sortColumn
-            
+
             createGrid()
             try:
                 for i, parameter in enumerate(self.settings.parameters):
                     newCol = forms.GridColumn()
                     newCol.Visible = parameter.checkBox.Checked
                     newCol.HeaderText = parameter.col.HeaderText
-                    
-                    #This textboxcell index is different when columns are reordered. So have to create new one. Otherwise, when added to grid, they are in wrong position.
+
                     newCol.DataCell = forms.TextBoxCell(parameter.colNum)
                     newCol.DataCell.TextAlignment = parameter.col.DataCell.TextAlignment
                     newCol.Sortable = parameter.col.Sortable
                     newCol.Editable = parameter.col.Editable
-                    
+
                     self.settings.parameters[i].col = newCol
                     self.grid.Columns.Add(newCol)
             except:
                 print("Column and Checkbox Setup failed")
-            
-            ########################################################################
-            #Context menu
+
             def createContextMenu():
                 self.changeSelectionName = forms.ButtonMenuItem()
                 self.changeSelectionName.Text = "Change Selected Object(s) Name"
@@ -801,16 +834,28 @@ class Tabl_Form(forms.Form):
                 self.copySelection.Text = "Copy Selection"
                 self.copySelection.Click += self.copySelectionToClipboard
 
-                self.contextMenu = forms.ContextMenu([self.changeSelectionName, self.changeSelectionLayer, self.changeSelectionColor, self.seperator3, self.addItem, self.removeItem, self.seperator1, self.selectItem, self.seperator2, self.copyItems, self.copySelection])
+                self.contextMenu = forms.ContextMenu(
+                    [
+                        self.changeSelectionName,
+                        self.changeSelectionLayer,
+                        self.changeSelectionColor,
+                        self.seperator3,
+                        self.addItem,
+                        self.removeItem,
+                        self.seperator1,
+                        self.selectItem,
+                        self.seperator2,
+                        self.copyItems,
+                        self.copySelection,
+                    ]
+                )
                 self.grid.ContextMenu = self.contextMenu
+
             createContextMenu()
-            
-            ########################################################################
-            self.countLbl = forms.Label(Text = "    Selection Error")
-            
-            ########################################################################
+
+            self.countLbl = forms.Label(Text="    Selection Error")
+
             def createButtons():
-                #Button - Add to selection
                 self.addSelection = forms.Button()
                 self.addSelection.Width = 30
                 if self.addImage is None:
@@ -820,7 +865,6 @@ class Tabl_Form(forms.Form):
                 self.addSelection.ToolTip = "Add objects to the table "
                 self.addSelection.Click += self.AddByPicking
 
-                #Button - Update Data
                 self.updateSelection = forms.Button()
                 if self.updateImage is None:
                     self.updateSelection.Text = "Update"
@@ -830,7 +874,6 @@ class Tabl_Form(forms.Form):
                 self.updateSelection.Width = 30
                 self.updateSelection.Click += self.Regen
 
-                #Button - Remove from selection
                 self.removeSelection = forms.Button()
                 if self.removeImage is None:
                     self.removeSelection.Text = " - "
@@ -840,73 +883,58 @@ class Tabl_Form(forms.Form):
                 self.removeSelection.ToolTip = "Remove objects from the Table"
                 self.removeSelection.Click += self.RemoveByPicking
 
-                #Button - Copy to Clipboard
                 self.btnCopy = forms.Button()
                 self.btnCopy.Text = "Copy"
                 self.btnCopy.ToolTip = "Copy data to the clipboard"
                 self.btnCopy.Click += self.copyToClipboard
 
-                #Button - Settings
                 self.btnSettings = forms.Button()
                 self.btnSettings.Text = "Settings"
                 self.btnSettings.ToolTip = "More Settings"
                 self.btnSettings.Click += self.OnSettingsDialog
 
-                #Button - Export Data
                 self.btnExport = forms.Button()
                 self.btnExport.Text = "Export as..."
                 self.btnExport.ToolTip = "Export Tabl to CSV, HTML, or TXT"
                 self.btnExport.Click += self.exportData
 
-                #Button - Close
                 self.btnClose = forms.Button()
                 self.btnClose.Text = "Close"
                 self.btnClose.ToolTip = "Close"
                 self.btnClose.Click += self.OnClosedDialog
-                
-                #Button - Place
+
                 self.btnPlace = forms.Button()
                 self.btnPlace.Text = "Place"
                 self.btnPlace.ToolTip = "Place Tabl in Rhino"
                 self.btnPlace.Click += self.OnPlaceBtnPressed
+
             createButtons()
-            
-            ########################################################################
-            #Checkbox - Show Units
+
             self.showUnitsBox = forms.CheckBox()
             self.showUnitsBox.Checked = self.settings.showUnits
             self.showUnitsBox.Text = "Show Units\t"
             self.showUnitsBox.CheckedChanged += self.OnOptionsChanged
-            
-            #Checkbox - Show Total
+
             self.showTotalsBox = forms.CheckBox()
             self.showTotalsBox.Checked = self.settings.showTotals
             self.showTotalsBox.Text = "Show Total\t"
             self.showTotalsBox.CheckedChanged += self.OnOptionsChanged
-            
-            #Checkbox - Show Headers
+
             self.showHeadersBox = forms.CheckBox()
             self.showHeadersBox.Checked = self.settings.showHeaders
             self.showHeadersBox.Text = "Export Headers\t"
             self.showHeadersBox.CheckedChanged += self.OnOptionsChanged
-            
-            
-            ########################################################################
+
             def createGroups():
-                #Groupbox - Checkboxes - Parameters
-                self.parameterGroup = forms.GroupBox(Text = "Properties")
+                self.parameterGroup = forms.GroupBox(Text="Properties")
                 self.parameterGroup.Padding = drawing.Padding(5)
                 self.parameterLayout = forms.DynamicLayout()
                 for parameter in self.settings.parameters:
                     self.parameterLayout.AddRow(parameter.checkBox)
                 self.parameterLayout.AddRow(None)
                 self.parameterGroup.Content = self.parameterLayout
-                
-                
-                
-                
-                #Groupbox - Checkboxes - Options
-                self.optionsGroup = forms.GroupBox(Text = "Options")
+
+                self.optionsGroup = forms.GroupBox(Text="Options")
                 self.optionsGroup.Padding = drawing.Padding(5)
                 self.optionsLayout = forms.DynamicLayout()
                 self.optionsLayout.AddRow(self.showUnitsBox)
@@ -914,19 +942,27 @@ class Tabl_Form(forms.Form):
                 self.optionsLayout.AddRow(self.showHeadersBox)
                 self.optionsLayout.AddRow(None)
                 self.optionsGroup.Content = self.optionsLayout
+
             createGroups()
-            
-            ########################################################################
-            #Dynamic Layout - gridLayout
-            self.gridGroupBox = forms.GroupBox(Text = "Schedule")
+
+            self.gridGroupBox = forms.GroupBox(Text="Schedule")
             self.gridLayout = forms.DynamicLayout()
             self.gridLayout.AddRow(self.grid)
             self.gridLayout.AddRow(None)
-            self.gridLayout.AddSeparateRow(self.addSelection, self.removeSelection,self.updateSelection, self.btnSettings, None,self.btnPlace, self.btnCopy, self.btnExport, self.btnClose)
+            self.gridLayout.AddSeparateRow(
+                self.addSelection,
+                self.removeSelection,
+                self.updateSelection,
+                self.btnSettings,
+                None,
+                self.btnPlace,
+                self.btnCopy,
+                self.btnExport,
+                self.btnClose,
+            )
             self.gridGroupBox.Content = self.gridLayout
             self.gridLayout.Spacing = drawing.Size(5, 5)
-            
-            #Dynamic Layout - paramPanel
+
             self.paramPanel = forms.DynamicLayout()
             self.paramPanel.AddSeparateRow(self.parameterGroup)
             self.paramPanel.AddSeparateRow(self.optionsGroup)
@@ -934,12 +970,11 @@ class Tabl_Form(forms.Form):
             self.paramPanel.AddSeparateRow(None)
         except:
             print("CreateControls() failed")
-    
-    #CreateEvents
+
     def CreateEvents(self):
         rc.Commands.Command.EndCommand += self.OnModifyObject
         sc.doc.ActiveDoc.ModifyObjectAttributes += self.OnModifyObject
-    
+
     def OnSettingsDialog(self, sender, e):
         try:
             settingsDialog = SettingsDialog(self.settings)
@@ -949,27 +984,26 @@ class Tabl_Form(forms.Form):
                 self.RegenFormat()
         except:
             print("OnSettingsDialog() failed")
-    
+
     def OnNewTable(self, sender, e):
         try:
-            result = rs.MessageBox("Are you sure you want to clear the Tabl?", 1 | 32 | 4096, 'New Tabl')
+            result = rs.MessageBox(
+                "Are you sure you want to clear the Tabl?", 1 | 32 | 4096, "New Tabl"
+            )
             if result == 1:
                 self.settings.guids = []
                 self.Regen()
         except:
             print("New Tabl failed")
-    
+
     def OnSaveTable(self, sender, e):
         try:
             s = self.settings.guids
-             
-            # using list comprehension
-            listToStr = ','.join([str(elem) for elem in s])
-             
-            #print(listToStr)
-                
-            rs.SetDocumentUserText("GUIDs",listToStr)
-            #print self.settings.guids
+
+            listToStr = ",".join([str(elem) for elem in s])
+
+
+            rs.SetDocumentUserText("GUIDs", listToStr)
             """path = rs.SaveFileName('Export GUIDs', "TXT Files (*.txt)|*.txt||")
             
             with open(path, 'w') as filehandle:
@@ -978,7 +1012,7 @@ class Tabl_Form(forms.Form):
             print("Saved Tabl")"""
         except Exception as e:
             print(e)
-            
+
     def OnOpenTable(self, sender, e):
         try:
             str = rs.GetDocumentUserText("GUIDs")
@@ -992,8 +1026,7 @@ class Tabl_Form(forms.Form):
                         countSuccess += 1
             except:
                 countErrors += 1
-            
-            
+
             """path = rs.OpenFileName('Import GUIDs', "TXT Files (*.txt)|*.txt||")
             with open(path, 'r') as filehandle:
                 for line in filehandle:
@@ -1009,11 +1042,11 @@ class Tabl_Form(forms.Form):
                 print("{} GUIDs imported".format(countSuccess))
             if countErrors >= 1:
                 print("{} objects cannot be found in this document".format(countErrors))
-            
+
             self.Regen()
         except Exception as e:
             print(e)
-    
+
     def OnPlaceBtnPressed(self, sender, e):
         try:
             self.Minimize()
@@ -1023,38 +1056,37 @@ class Tabl_Form(forms.Form):
                 dataToPlace.insert(0, tempData)
             else:
                 dataToPlace = self.VisibleDataList()
-            
+
             placeDialog = PlaceDialog(dataToPlace, self.settings)
             placeDialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
             self.BringToFront()
         except:
             print("FAILED")
-    
+
     def OnViewAll(self, sender, e):
         try:
             for parameter in self.settings.parameters:
                 parameter.checkBox.Checked = True
         except:
             print("View all failed")
-    
+
     def OnHideAll(self, sender, e):
         try:
             for parameter in self.settings.parameters:
                 parameter.checkBox.Checked = False
         except:
             print("Hiding all failed")
-    
-    #Change selection functions
+
     def AddByPicking(self, sender, e):
         try:
             self.Minimize()
             rs.LockObjects(self.settings.guids)
-            newIDs = rs.GetObjects("Select objects to add to selection", preselect = True)
+            newIDs = rs.GetObjects("Select objects to add to selection", preselect=True)
             rs.UnlockObjects(self.settings.guids)
-            if newIDs is None: return
+            if newIDs is None:
+                return
             self.settings.guids += newIDs
-            
-            #Regen
+
             self.Regen()
             self.BringToFront()
         except:
@@ -1064,18 +1096,19 @@ class Tabl_Form(forms.Form):
     def RemoveByPicking(self, sender, e):
         try:
             self.Minimize()
-            #Get objs to remove
             rs.EnableRedraw(False)
             tempLock = rs.InvertSelectedObjects(rs.SelectObjects(self.settings.guids))
             rs.LockObjects(tempLock)
             rs.EnableRedraw(True)
-            items = rs.GetObjects("Select objects to remove from selection", preselect = True)
+            items = rs.GetObjects(
+                "Select objects to remove from selection", preselect=True
+            )
             rs.UnlockObjects(tempLock)
-            if items is None: return
+            if items is None:
+                return
             for item in items:
                 if item in self.settings.guids:
                     self.settings.guids.remove(item)
-            #Regen
             self.Regen()
             self.BringToFront()
         except:
@@ -1083,37 +1116,30 @@ class Tabl_Form(forms.Form):
             self.BringToFront()
 
     def RemoveSelection(self, sender, e):
-        #Get objs to remove
         items = list(self.grid.SelectedItems)
         counter = 0
         for item in items:
             try:
                 guid = rs.coerceguid(str(item[1]))
                 if guid:
-                    #Remove from dataStore
                     data = self.grid.DataStore
                     for i, row in enumerate(data):
                         if str(row[1]) == str(guid):
                             data.pop(i)
                             counter += 1
                     self.grid.DataStore = data
-                    
-                    #Remove from settings
+
                     if guid in self.settings.guids:
                         self.settings.guids.remove(guid)
             except:
                 print("Tabl_ failed to remove an item.")
         print("{} items removed from Tabl_".format(counter))
-        
-        #Regen
+
         self.Regen()
-    
+
     def Regen(self, *args):
-        #Remove blank GUIDs
         self.CleanGUIDs()
-        #Regen Data
         self.RegenData()
-        #Regen Format
         self.RegenFormat()
 
     def CleanGUIDs(self):
@@ -1134,6 +1160,7 @@ class Tabl_Form(forms.Form):
 
     def RegenData(self):
         try:
+
             def RegenDataForObj(num, obj):
                 try:
                     isCurve = rs.IsCurve(obj)
@@ -1147,37 +1174,33 @@ class Tabl_Form(forms.Form):
                     isCurve = False
                     isSurface = False
                     isMesh = False
-                
-                #Number
+
                 try:
-                    number = num+1
+                    number = num + 1
                 except:
                     number = ""
                     print("number failed")
 
-                #GUID
                 try:
                     guid = str(obj)
                 except:
                     guid = "Error"
                     print("guid failed")
 
-                #Name
                 try:
                     name = rs.ObjectName(obj)
-                    if name is None: name = "<None>"
+                    if name is None:
+                        name = "<None>"
                 except:
                     name = "<unnamed>"
                     print("name failed")
 
-                #Layer
                 try:
                     layer = rs.LayerName(rs.ObjectLayer(obj), False)
                 except:
                     layer = "Unknown"
                     print("layer failed")
 
-                #Length
                 try:
                     if isCurve:
                         length = str(rs.CurveLength(obj) * self.settings.unitScale)
@@ -1191,7 +1214,6 @@ class Tabl_Form(forms.Form):
                     length = None
                     print("length failed")
 
-                #Area
                 try:
                     if isCurve:
                         if rs.IsCurveClosed(obj):
@@ -1207,14 +1229,17 @@ class Tabl_Form(forms.Form):
                     area = ""
                     print("area failed")
 
-                #Volume
                 try:
                     if rs.IsPolysurface(obj):
                         if rs.IsPolysurfaceClosed(obj):
-                            volume = str(rs.SurfaceVolume(obj)[0] * (self.settings.unitScale**3))
+                            volume = str(
+                                rs.SurfaceVolume(obj)[0] * (self.settings.unitScale**3)
+                            )
                     if isMesh:
                         if rs.IsMeshClosed(obj):
-                            volume = str(rs.MeshVolume(obj)[1] * (self.settings.unitScale**3))
+                            volume = str(
+                                rs.MeshVolume(obj)[1] * (self.settings.unitScale**3)
+                            )
                     try:
                         volume
                     except:
@@ -1223,7 +1248,6 @@ class Tabl_Form(forms.Form):
                     volume = None
                     print("volume failed")
 
-                #Material
                 """
                 try:
                     tempMat = rs.MaterialName(rs.ObjectMaterialIndex(obj))
@@ -1235,24 +1259,23 @@ class Tabl_Form(forms.Form):
                     material = ""
                     print("material failed")
                 """
-                #Comments
-                comments = rs.GetUserText(obj, 'tabl.comment')
-                
+                comments = rs.GetUserText(obj, "tabl.comment")
+
                 if comments is None or len(comments) < 1:
-                    rs.SetUserText(obj, 'tabl.comment', ' ')
-                    comments = ''
-                
+                    rs.SetUserText(obj, "tabl.comment", " ")
+                    comments = ""
+
                 thisData = [
-                number,     #0
-                guid,       #1
-                name,       #3
-                layer,      #4
-                length,     #10
-                area,       #11
-                comments
+                    number,
+                    guid,
+                    name,
+                    layer,
+                    length,
+                    area,
+                    comments,
                 ]
                 return thisData
-            
+
             self.data = []
             for i, obj in enumerate(self.settings.guids):
                 try:
@@ -1262,25 +1285,18 @@ class Tabl_Form(forms.Form):
             self.grid.DataStore = self.data
         except:
             print("RegenData() Failed")
-    
+
     def RegenFormat(self):
         try:
-            #Re-sort the data
             self.sortData()
-            #Renumber
             self.renumberData()
-            #Totals
             self.showTotalsFunc()
-            #Thousands Separator
             self.formatNumbers()
-            #Units
             self.showUnitsFunc()
-            #Update Count Label
             self.recountLabel()
         except:
             print("RegenFormat() Failed")
 
-    #Modify object functions
     def OnOptionsChanged(self, sender, e):
         try:
             self.settings.showUnits = self.showUnitsBox.Checked
@@ -1289,13 +1305,13 @@ class Tabl_Form(forms.Form):
             self.Regen()
         except:
             print("Options Change failed")
-    
+
     def OnSelectFromGrid(self, sender, e):
         try:
             rs.UnselectAllObjects()
             selectItems = []
             items = list(self.grid.SelectedItems)
-            
+
             for i, parameter in enumerate(self.settings.parameters):
                 if parameter.name == "GUID":
                     GUIDcolNum = i
@@ -1317,10 +1333,10 @@ class Tabl_Form(forms.Form):
                 rs.ObjectName(e.Item[1], newName)
             elif columnEdited == "Comments":
                 for i, parameter in enumerate(self.settings.parameters):
-                    if parameter.name == 'Comments':
+                    if parameter.name == "Comments":
                         comment = str(e.Item[i])
                         break
-                rs.SetUserText(e.Item[1], 'tabl.comment',comment)
+                rs.SetUserText(e.Item[1], "tabl.comment", comment)
                 print("Comment Added")
         except:
             print("OnCellChanged() failed")
@@ -1328,11 +1344,11 @@ class Tabl_Form(forms.Form):
     def OnNameChanged(self, sender, e):
         try:
             objects = list(self.grid.SelectedItems)
-            newName = rs.StringBox("New Object Name", title = "Rename Objects")
+            newName = rs.StringBox("New Object Name", title="Rename Objects")
             for obj in objects:
                 if len(obj[1]) > 0:
                     rs.ObjectName(obj[1], newName)
-            
+
             self.Regen()
         except:
             print("OnNameChanged() Failed")
@@ -1344,10 +1360,9 @@ class Tabl_Form(forms.Form):
             for obj in objects:
                 if len(obj[1]) > 0:
                     rs.ObjectLayer(obj[1], newLayer)
-            
-            #if self.settings.updateMode == 0:
+
             self.Regen()
-            
+
         except:
             print("OnLayerChanged() Failed")
 
@@ -1358,46 +1373,42 @@ class Tabl_Form(forms.Form):
             for obj in objects:
                 if len(obj[1]) > 0:
                     rs.ObjectColor(obj[1], newColor)
-            
-            #if self.settings.updateMode == 0:
+
             self.Regen()
-            
+
         except:
             print("OnLayerChanged() Failed")
 
     def OnModifyObject(self, *args):
         try:
             if int(self.settings.updateMode) == 0:
-                #If automatic mode selected
                 self.Regen()
         except:
             print("OnModifyObject() failed")
 
     def OnSizeChanged(self, *args):
-        self.grid.Height = self.Height-145
+        self.grid.Height = self.Height - 145
         self.settings.dialogWidth = self.Size.Width
         self.settings.dialogHeight = self.Size.Height
 
     def OnPositionChanged(self, *args):
         self.settings.dialogPosX = self.Location.X
         self.settings.dialogPosY = self.Location.Y
-        
 
-    #Get Active
     def VisibleHeadingsList(self):
         currentHeadings = []
         for parameter in self.settings.parameters:
             if parameter.col.Visible:
                 currentHeadings.append(parameter.name)
         return currentHeadings
-    
+
     def VisibleDataList(self):
         currentColumnIndexes = []
-        
+
         for i, parameter in enumerate(self.settings.parameters):
             if parameter.checkBox.Checked:
                 currentColumnIndexes.append(i)
-        
+
         newDataStore = []
         for row in self.grid.DataStore:
             thisRow = []
@@ -1405,41 +1416,37 @@ class Tabl_Form(forms.Form):
                 thisRow.append(row[index])
             newDataStore.append(thisRow)
         return newDataStore
-    
+
     def SelectedDataList(self):
         currentColumnIndexes = []
-        
+
         for i, parameter in enumerate(self.settings.parameters):
             if parameter.checkBox.Checked:
                 currentColumnIndexes.append(i)
-        
+
         newDataStore = []
         for row in self.grid.SelectedItems:
             thisRow = []
             for index in currentColumnIndexes:
                 thisRow.append(row[index])
             newDataStore.append(thisRow)
-        return newDataStore    
-    
-    #SORT
+        return newDataStore
+
     def sortColumn(self, sender, e):
         try:
             self.CleanGUIDs()
-            #Regen Data
             self.RegenData()
-            
+
             self.hideTotalsFunc()
-            
+
             colName = e.Column.HeaderText.split(" ")[0]
             for i, parameter in enumerate(self.settings.parameters):
                 if parameter.col == e.Column:
                     self.settings.sortingBy = i
                     parameter.sortDescending = not parameter.sortDescending
                     break
-            
-            #Headers
+
             self.AddHeaderArrow()
-            #Regen Format
             self.RegenFormat()
         except:
             print("sortColumn() Failed")
@@ -1450,7 +1457,7 @@ class Tabl_Form(forms.Form):
                 self.settings.sortingBy
             except:
                 self.settings.sortingBy = 0
-            
+
             state = self.settings.parameters[self.settings.sortingBy].sortDescending
             keys = []
             for row in self.grid.DataStore:
@@ -1464,7 +1471,7 @@ class Tabl_Form(forms.Form):
                     keyFormat = keyRaw.lower()
                 keys.append(keyFormat)
             zipLists = zip(keys, self.grid.DataStore)
-            zipLists.sort(reverse = state)
+            zipLists.sort(reverse=state)
             self.grid.DataStore = [x for y, x in zipLists]
         except:
             print("sortData() Failed")
@@ -1473,7 +1480,7 @@ class Tabl_Form(forms.Form):
         try:
             data = self.grid.DataStore
             for i, row in enumerate(data):
-                row[0] = str(i+1)
+                row[0] = str(i + 1)
             self.grid.DataStore = data
         except:
             print("renumberData() Failed")
@@ -1481,17 +1488,20 @@ class Tabl_Form(forms.Form):
     def AddHeaderArrow(self):
         for parameter in self.settings.parameters:
             parameter.col.HeaderText = parameter.col.HeaderText.split(" ")[0]
-        
+
         direction = self.settings.parameters[self.settings.sortingBy].sortDescending
         if direction:
-            self.settings.parameters[self.settings.sortingBy].col.HeaderText += " "+ u'\u2191'
+            self.settings.parameters[self.settings.sortingBy].col.HeaderText += (
+                " " + "\u2191"
+            )
         else:
-            self.settings.parameters[self.settings.sortingBy].col.HeaderText += " " + u'\u2193'
-    
-    #CLOSE
+            self.settings.parameters[self.settings.sortingBy].col.HeaderText += (
+                " " + "\u2193"
+            )
+
     def OnClosedDialog(self, sender, e):
         self.Close()
-    
+
     def closeDialog(self, sender, e):
         try:
             sc.doc.ActiveDoc.ModifyObjectAttributes -= self.OnModifyObject
@@ -1499,12 +1509,11 @@ class Tabl_Form(forms.Form):
         except:
             print("RemoveEvents() failed")
         try:
-            sc.sticky['tabl.settings'] = self.settings
+            sc.sticky["tabl.settings"] = self.settings
             self.Close()
         except:
             print("closeDialog() failed")
 
-    #Functions
     def formatNumbers(self):
         try:
             data = self.grid.DataStore
@@ -1512,16 +1521,23 @@ class Tabl_Form(forms.Form):
                 for j, parameter in enumerate(self.settings.parameters):
                     if parameter.is_float:
                         try:
-                            #float(row[j]) #Sometime data in grid is a float, sometimes string, this catches that
-                            if len(row[j])>0:
+                            if len(row[j]) > 0:
                                 if self.settings.commaSep == 0:
-                                    data[i][j] = "{0:.{prec}f}".format(float(row[j]), prec = int(self.settings.decPlaces))
+                                    data[i][j] = "{0:.{prec}f}".format(
+                                        float(row[j]), prec=int(self.settings.decPlaces)
+                                    )
                                 elif self.settings.commaSep == 1:
-                                    data[i][j] = "{0:,.{prec}f}".format(float(row[j]), prec = int(self.settings.decPlaces))
+                                    data[i][j] = "{0:,.{prec}f}".format(
+                                        float(row[j]), prec=int(self.settings.decPlaces)
+                                    )
                                 elif self.settings.commaSep == 2:
-                                    data[i][j] = "{0:,.{prec}f}".format(float(row[j]), prec = int(self.settings.decPlaces)).replace(',', '.')
+                                    data[i][j] = "{0:,.{prec}f}".format(
+                                        float(row[j]), prec=int(self.settings.decPlaces)
+                                    ).replace(",", ".")
                                 elif self.settings.commaSep == 3:
-                                    data[i][j] = "{0:,.{prec}f}".format(float(row[j]), prec = int(self.settings.decPlaces)).replace(',', ' ')
+                                    data[i][j] = "{0:,.{prec}f}".format(
+                                        float(row[j]), prec=int(self.settings.decPlaces)
+                                    ).replace(",", " ")
                         except:
                             print("Failed to format number")
             self.grid.DataStore = data
@@ -1534,7 +1550,7 @@ class Tabl_Form(forms.Form):
                 customUnit = True
             else:
                 customUnit = False
-            
+
             data = self.grid.DataStore
             try:
                 for row in data:
@@ -1543,9 +1559,17 @@ class Tabl_Form(forms.Form):
                             if len(row[i]) > 0:
                                 if parameter.units:
                                     if customUnit:
-                                        row[i] += " " + self.settings.customUnit + parameter.superscript
+                                        row[i] += (
+                                            " "
+                                            + self.settings.customUnit
+                                            + parameter.superscript
+                                        )
                                     else:
-                                        row[i] += " " + parameter.units + parameter.superscript
+                                        row[i] += (
+                                            " "
+                                            + parameter.units
+                                            + parameter.superscript
+                                        )
                         except:
                             pass
             except:
@@ -1576,7 +1600,7 @@ class Tabl_Form(forms.Form):
                     secondLastRow.append("")
                     lastRow.append("")
                 lastRow[0] = "TOTAL"
-                
+
                 for i, parameter in enumerate(self.settings.parameters):
                     if parameter.totalable:
                         total = 0
@@ -1608,7 +1632,6 @@ class Tabl_Form(forms.Form):
     def recountLabel(self):
         self.countLbl.Text = "Selected: {} objects".format(len(self.settings.guids))
 
-    #I/O Functions
     def copyToClipboard(self, sender, e):
         try:
             string = self.DataStoreToHTML()
@@ -1628,12 +1651,15 @@ class Tabl_Form(forms.Form):
 
     def exportData(self, sender, e):
         try:
-            fileName = rs.SaveFileName("Save Tabl", filter = "CSV Files (*.csv)|*.csv|HTML Files (*.html)|*.html|TXT Files (*.txt)|*.txt||")
+            fileName = rs.SaveFileName(
+                "Save Tabl",
+                filter="CSV Files (*.csv)|*.csv|HTML Files (*.html)|*.html|TXT Files (*.txt)|*.txt||",
+            )
             extension = fileName.split(".")[-1]
             if fileName is None:
                 return
             try:
-                f = open(fileName,'w')
+                f = open(fileName, "w")
             except IOError:
                 print("Cannot save file. File already open.")
                 return
@@ -1643,18 +1669,15 @@ class Tabl_Form(forms.Form):
                 if extension == "csv":
                     tempCommaSep = self.settings.commaSep
                     tempColorFormat = self.settings.colorFormat
-                    
+
                     if tempColorFormat == 2:
                         tempColorFormat = 1
-                    
-                    #This needs to be fixed. Uses different comma sep index, not bool
-                    #if tempCommaSep:
-                    #    tempCommaSep = False
-                    
+
+
                     self.Regen()
-                    
+
                     string = self.DataStoreToCSV()
-                    
+
                     self.Regen()
                 if extension == "txt":
                     string = self.DataStoreToTXT()
@@ -1669,7 +1692,7 @@ class Tabl_Form(forms.Form):
     def DataStoreToTXT(self):
         string = ""
         seperator = "\t"
-        
+
         if self.settings.showHeaders:
             allHeadings = self.VisibleHeadingsList()
             for heading in allHeadings:
@@ -1680,13 +1703,13 @@ class Tabl_Form(forms.Form):
                     numTabs = 2
                 string += str(heading) + (seperator * numTabs)
             string += "\n"
-        
+
         allData = self.VisibleDataList()
-        
+
         for row in allData:
             for item in row:
                 if str(item) == "None":
-                    string += (seperator * numTabs)
+                    string += seperator * numTabs
                 else:
                     itemLen = len(str(item))
                     if itemLen >= 8:
@@ -1712,7 +1735,7 @@ class Tabl_Form(forms.Form):
                 if str(item) == "None":
                     string += ","
                 else:
-                    string +=  '"' + str(item) + '",'
+                    string += '"' + str(item) + '",'
             string += "\n"
         return string
 
@@ -1721,19 +1744,19 @@ class Tabl_Form(forms.Form):
         string += "body {color: dimgray;}"
         string += "table, th, td{border-collapse: collapse; border: 1px solid black;padding: 10px;}"
         string += "</style></head><body><table>"
-        
+
         if self.settings.showHeaders:
             allHeadings = self.VisibleHeadingsList()
             string += "<tr>"
             for heading in allHeadings:
                 string += "<th>" + str(heading) + "</th>"
             string += "</tr>"
-        
+
         if len(args) == 0:
             allData = self.VisibleDataList()
         else:
             allData = self.SelectedDataList()
-        
+
         for row in allData:
             string += "<tr>"
             for item in row:
@@ -1744,13 +1767,13 @@ class Tabl_Form(forms.Form):
         string += "</table>"
         return string
 
+
 def main():
     Tabl = Tabl_Form()
     Tabl.Owner = rc.UI.RhinoEtoApp.MainWindow
     Tabl.Show()
 
+
 if __name__ == "__main__":
     main()
-    
-    
-    #self.Close()
+

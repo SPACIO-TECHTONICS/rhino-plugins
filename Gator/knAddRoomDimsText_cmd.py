@@ -1,22 +1,14 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-import rhinoscriptsyntax as rs  # type: ignore
-import Rhino.Geometry as rg  # type: ignore
-import scriptcontext as sc  # type: ignore
-import Rhino  # type: ignore
-import System.Drawing  # type: ignore
+import rhinoscriptsyntax as rs
+import Rhino.Geometry as rg
+import scriptcontext as sc
+import Rhino
+import System.Drawing
 
-# We use the 'sticky' dictionary to remember the detail between command runs
 DETAIL_KEY = "KN_LAST_DETAIL_ID"
 
 def format_arch(dist, u_sys):
@@ -39,7 +31,6 @@ def RunCommand(is_interactive):
 sc.doc = Rhino.RhinoDoc.ActiveDoc
     u_sys = sc.doc.ModelUnitSystem
     
-    # 1. Handle Detail Selection Logic
     detail_id = None
     all_details = rs.ObjectsByType(rs.filter.detail)
     
@@ -47,11 +38,9 @@ sc.doc = Rhino.RhinoDoc.ActiveDoc
         print("No details found on this layout.")
         return
     
-    # If only one detail exists, use it automatically
     if len(all_details) == 1:
         detail_id = all_details[0]
     else:
-        # Check if we remember a detail from last time
         prev_detail = sc.sticky.get(DETAIL_KEY)
         if prev_detail and rs.IsObject(prev_detail):
             choice = rs.GetString("Use previous detail?", "Yes", ["Yes", "SelectNew"])
@@ -63,27 +52,22 @@ sc.doc = Rhino.RhinoDoc.ActiveDoc
             detail_id = rs.GetObject("Select the Detail View", rs.filter.detail)
 
     if not detail_id: return
-    sc.sticky[DETAIL_KEY] = detail_id # Save for next time
+    sc.sticky[DETAIL_KEY] = detail_id
     
     detail_obj = rs.coercegeometry(detail_id)
-    # Using the division logic as requested
     scale = detail_obj.PageToModelRatio
-    if scale == 0: scale = 1.0 # Prevent division by zero
+    if scale == 0: scale = 1.0
 
-    # 2. Get Measurements
     l_pts = rs.GetLine(0, message1="Length Start", message2="Length End")
     if not l_pts: return
     w_pts = rs.GetLine(0, message1="Width Start", message2="Width End")
     if not w_pts: return
 
-    # 3. Calculate Scale
-    # Applying the / scale logic
     real_len = l_pts[0].DistanceTo(l_pts[1]) / scale
     real_wid = w_pts[0].DistanceTo(w_pts[1]) / scale
     
     dim_str = "{} x {}".format(format_arch(real_len, u_sys), format_arch(real_wid, u_sys))
 
-    # 4. Interactive Placement
     def GetPointDynamic(sender, args):
         plane = rg.Plane.WorldXY
         plane.Origin = args.CurrentPoint
@@ -97,7 +81,6 @@ sc.doc = Rhino.RhinoDoc.ActiveDoc
     
     if gp.CommandResult() != Rhino.Commands.Result.Success: return
     
-    # 5. Final Bake
     final_plane = rg.Plane.WorldXY
     final_plane.Origin = gp.Point()
     text_ent = rg.TextEntity.Create(dim_str, final_plane, sc.doc.DimStyles.Current, False, 0, 0)

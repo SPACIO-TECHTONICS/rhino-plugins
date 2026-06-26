@@ -1,37 +1,36 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
 # Copyright (c) 2026 Spacio Techtonics / Keshava Narayan
 
-'''
+"""
 
 
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE 
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
 WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR 
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
 THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-'''
+"""
 
-# Project Curves to TIN
 
-from rhinoscript.object import FlashObject
-import rhinoscriptsyntax as rs  # type: ignore
+import rhinoscriptsyntax as rs
 
 
 def ProjectCurvesToTIN():
     try:
-        crvs = rs.GetObjects(message="Select curves to project", filter=4, group=True, preselect=False,
-                             select=False, objects=None, minimum_count=1, maximum_count=0,
-                             custom_filter=None)
+        crvs = rs.GetObjects(
+            message="Select curves to project",
+            filter=4,
+            group=True,
+            preselect=False,
+            select=False,
+            objects=None,
+            minimum_count=1,
+            maximum_count=0,
+            custom_filter=None,
+        )
         if not crvs:
             return
         obj = rs.GetObject("Select the TIN to project onto", 8 | 16 | 32)
@@ -43,46 +42,38 @@ def ProjectCurvesToTIN():
 
         rs.EnableRedraw(False)
 
-        # Convert Mesh to Nurbs for ShootRay compatibility
         if isMesh == True:
             srf = rs.MeshToNurb(obj)
         if isMesh == False:
             srf = obj
 
-        # Shoot ray from each grip point and move grips to reflection point
         for crv in crvs:
             rs.EnableObjectGrips(crv)
             grips = rs.ObjectGripLocations(crv)
             for grip in grips:
-
                 zUp = rs.ShootRay(srf, grip, (0, 0, 1), 1)
-                # if zUp != None:
                 if zUp == None:
                     zUpList.append(False)
                 else:
                     zUpList.append(zUp[1])
 
                 zDown = rs.ShootRay(srf, grip, (0, 0, -1), 1)
-                # if zDown != None:
                 if zDown == None:
                     zDownList.append(False)
                 else:
                     zDownList.append(zDown[1])
 
-            rs.CopyObject(crv)  # Copy Existing curve
+            rs.CopyObject(crv)
 
-            # Find the right list to iterate over and insert existing points for any falses
             if all(x is False for x in zUpList):
                 falseindex = [i for i, val in enumerate(zDownList) if not val]
                 for i in falseindex:
-                    # Replace False with existing grip location and closest Z value
                     closestPt = rs.BrepClosestPoint(srf, grips[i])
                     zDownList[i] = (grips[i].X, grips[i].Y, closestPt[0].Z)
                 rs.ObjectGripLocations(crv, zDownList)
             else:
                 falseindex = [i for i, val in enumerate(zUpList) if not val]
                 for i in falseindex:
-                    # Replace False with existing grip location and closest Z value
                     closestPt = rs.BrepClosestPoint(srf, grips[i])
                     zUpList[i] = (grips[i].X, grips[i].Y, closestPt[0].Z)
                 rs.ObjectGripLocations(crv, zUpList)
