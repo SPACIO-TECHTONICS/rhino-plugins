@@ -9,6 +9,7 @@ We built this suite of plugins to solve the exact modeling and block-management 
 | Plugin | Description |
 |--------|-------------|
 | Gator | Layout-space tools — detail naming, annotation, alignment, projected views |
+| Peacock | WIP Chart Visualisation in Rhino |
 | Roebuck | Area/length measurement, layer management, display modes, blocks |
 | BlueWhale | OSM import, terrain, road generation, land-use colours |
 
